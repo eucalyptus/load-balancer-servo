@@ -15,21 +15,25 @@
 # Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
-
-from util import TimeoutError
+import servo
+from servo.util import TimeoutError
+from servo.config import RUN_ROOT, INSTALL_ROOT
 from listener import Listener
 import os
 import shutil
-import servo
-import config
 import traceback
 import sys
 from haproxy_conf import ConfBuilderHaproxy
 from haproxy_process import HaproxyProcess
 
-CONF_FILE = config.RUN_ROOT+"/euca_haproxy.conf"
-CONF_FILE_TEMPLATE = config.INSTALL_ROOT+"/haproxy_template.conf"
-PID_PATH = config.RUN_ROOT+"/haproxy.pid"
+CONF_FILE = RUN_ROOT+"/euca_haproxy.conf"
+CONF_FILE_TEMPLATE = INSTALL_ROOT+"/haproxy_template.conf"
+PID_PATH = RUN_ROOT+"/haproxy.pid"
+
+def cleanup():
+    try:
+       os.unlink(CONF_FILE)
+    except: pass
 
 class ProxyActionTransaction(object):
     def __init__(self, actions=[]):
@@ -129,7 +133,10 @@ class ProxyCreate(ProxyAction):
             instance = {'hostname':host, 'port': self.__listener.getInstancePort(), 'protocol': self.__listener.getInstanceProtocol()}
             instances.append(instance)
         try: 
-            builder.add(protocol=self.__listener.getProtocol(), port=self.__listener.getPort(), instances=instances).build(CONF_FILE)
+            comment=None
+            if self.__listener.getLoadbalancer() is not None:
+                comment="lb-%s" % self.__listener.getLoadbalancer()
+            builder.add(protocol=self.__listener.getProtocol(), port=self.__listener.getPort(), instances=instances, comment=comment).build(CONF_FILE)
         except Exception, err:
             self.__status =ProxyAction.STATUS_ERROR
             servo.log.error('failed to add new frontend to the config: %s' % err)
@@ -190,22 +197,3 @@ class ProxyRemoveInstance(ProxyAction):
 
     def status(self):
         pass
-
-class ProxyInterface(object):
-    """
-    Represent the commands that underlying proxy will perform
-    """ 
-    def create(self, listener):
-        raise NotImplementedError 
-
-    def update(self, listener):
-        raise NotImplementedError
-
-    def teardown(self, listener):
-        raise NotImplementedError
-
-    def addBackend(self, instance):
-        raise NotImplementedError
-   
-    def removeBackend(self, instance):
-        raise NotImplementedError

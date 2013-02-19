@@ -32,9 +32,9 @@ class ConfBuilder(object):
     def build(self, destination=None):
         raise NotImplementedException
 
-    def add(self, protocol, port, instances=[]):
+    def add(self, protocol, port, instances=[], comment=None):
         try:
-            self.addProtocolPort(protocol, port)
+            self.addProtocolPort(protocol, port, comment )
             for instance in instances:
                 self.addBackend(port, instance)
         except Exception, err:
@@ -136,7 +136,7 @@ class ConfBuilderHaproxy(ConfBuilder):
                     break
         return backend_name
 
-    def addProtocolPort(self, protocol='tcp', port=80):
+    def addProtocolPort(self, protocol='tcp', port=80, comment=None):
         '''
             add new protocol/port to the config file. if there's existing one, pass
         '''
@@ -152,6 +152,8 @@ class ConfBuilderHaproxy(ConfBuilder):
         section_name = 'frontend %s-%s' % (protocol,port)
         if not section_name in self.__content_map.iterkeys():
             self.__content_map[section_name]= [] 
+            if comment is not None:
+                self.__content_map[section_name].append('# %s'%comment)
             self.__content_map[section_name].append('mode %s' % protocol)
             self.__content_map[section_name].append('bind 0.0.0.0:%s' % port)
             def_backend = 'backend-%s-%s' % (protocol, port)

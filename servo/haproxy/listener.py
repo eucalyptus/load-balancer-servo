@@ -17,7 +17,10 @@
 # additional information or have any questions.
 
 class Listener(object):
-    def __init__(self, protocol, port, instance_port=None, instance_protocol=None, ssl_cert=None):
+    def __init__(self, protocol, port, instance_port=None, instance_protocol=None, ssl_cert=None, loadbalancer=None):
+        self.__loadbalancer = loadbalancer  #loadbalancer name for debugging
+        if protocol is not None:
+            protocol = protocol.lower()
         self.__protocol = protocol
         self.__port = port
         if instance_port is not None:
@@ -25,7 +28,7 @@ class Listener(object):
         else:
             self.__instance_port = port
         if instance_protocol is not None:
-            self.__instance_protocol = instance_protocol
+            self.__instance_protocol = instance_protocol.lower()
         else:
             self.__instance_protocol = protocol
  
@@ -55,6 +58,9 @@ class Listener(object):
 
     def getInstances(self):
         return self.__instances
+  
+    def getLoadbalancer(self):
+        return self.__loadbalancer
 
     def __eq__(self, other):
         if not isinstance(other, Listener):

@@ -15,11 +15,11 @@
 # Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
+from servo.haproxy import ProxyManager, Listener
+mytest=1
 if __name__ == "__main__":
-    from servo import ProxyManager, Listener
-
     print "TEST -- CREATE NEW LISTENER"  
-    first = Listener(protocol='tcp', port=80, instance_port=80)
+    first = Listener(protocol='tcp', port=80, instance_port=80, loadbalancer='lb01')
     first.addInstance('192.168.0.100')
     proxy = ProxyManager() 
     proxy.updateListeners([first])
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         print "ERROR: new listener not found"
 
     print "TEST -- ADD NEW LISTENER"
-    second = Listener(protocol='http', port=82, instance_port=80)
+    second = Listener(protocol='http', port=82, instance_port=80, loadbalancer='lb02')
     second.addInstance('192.168.0.101')
     second.addInstance('192.168.0.102')
     proxy.updateListeners([first, second])
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         print "ERROR: second listener not added"
 
     print "TEST -- KEEP SAME LISTENERS"
-    second_copy = Listener(protocol='http', port=82, instance_port=80)
+    second_copy = Listener(protocol='http', port=82, instance_port=80, loadbalancer='lb02')
     second_copy.addInstance('192.168.0.101')
     second_copy.addInstance('192.168.0.102')
     proxy.updateListeners([first, second_copy])
@@ -60,8 +60,8 @@ if __name__ == "__main__":
         print "ERROR: second listener not removed"
    
     print "TEST -- ADD MULTIPLE NEW LISTENER"
-    third = Listener(protocol='http', port=83, instance_port=82)
-    fourth = Listener(protocol='http', port=84, instance_port=83)
+    third = Listener(protocol='http', port=83, instance_port=82, loadbalancer='lb03')
+    fourth = Listener(protocol='http', port=84, instance_port=83, loadbalancer='lb04')
     proxy.updateListeners([first, third, fourth])
     current = proxy.getListeners()
     if len(current) == 3 and first in current and third in current and fourth in current:
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         print "ERROR: third listener not added"
 
     print "TEST -- MODIFY INSTANCE MEMBERSHIP"
-    new_fourth = Listener(protocol='http', port=84, instance_port=83)
+    new_fourth = Listener(protocol='http', port=84, instance_port=83, loadbalancer='lb04')
     new_fourth.addInstance('192.168.0.109')
     proxy.updateListeners([first,third,new_fourth])
     current = proxy.getListeners()

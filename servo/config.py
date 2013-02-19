@@ -19,3 +19,22 @@
 RUN_ROOT = "/var/run/eucaservo"
 LOG_FILE = "/var/log/eucaservo.log"
 INSTALL_ROOT = "/root"# os.environ['SERVO_HOME']
+QUERY_PERIOD_SEC = 10
+
+def get_access_key_id():
+    return 'XZI553LGSDQFGEOLKQ0CH'  # TODO: IAM role
+
+def get_secret_access_key():
+    return 'Awqmvo2XL3KWfEmbN4MI2l8zr0I76b5Cq85jZrbx' #TODO: IAM role
+
+def get_clc_host():
+    return '192.168.0.108' #TODO
+
+def get_clc_port():
+    return 8773 #TODO
+
+def get_ec2_path():
+    return 'services/Eucalyptus' #TODO
+
+def get_availability_zone():
+    return 'PARTI00' #TODO

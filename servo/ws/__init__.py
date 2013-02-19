@@ -1,13 +1,14 @@
 import boto
 from boto.ec2.elb import ELBConnection
 from boto.ec2.regioninfo import RegionInfo
+from boto.ec2.elb.loadbalancer import LoadBalancer
 
 def connect_elb(host_name=None, port=8773, cluster=None, path="services/LoadBalancing", aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
     region=RegionInfo(name=cluster, endpoint=host_name)
     
-    return EucaServoConnection(region=region, port=port, path=path, aws_access_key_id=None, aws_secret_access_key=None, **kwargs)
+    return EucaELBConnection(region=region, port=port, path=path, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, **kwargs)
 
-class EucaServoConnection(ELBConnection):
+class EucaELBConnection(ELBConnection):
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None,
                  is_secure=False, port=None, proxy=None, proxy_port=None,
                  proxy_user=None, proxy_pass=None, debug=0,

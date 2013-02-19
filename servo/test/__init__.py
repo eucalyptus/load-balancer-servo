@@ -15,25 +15,5 @@
 # Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
-import logging
-import logging.config
-from servo.config import LOG_FILE
-from servo.main_loop import ServoLoop
 
-__version__ = '1.0.0-dev'
-Version = __version__
-
-
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-
-format_string = "%(asctime)s %(name)s [%(levelname)s]:%(message)s"
-logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG, format=format_string)
-log = logging.getLogger('servo')
-console = logging.StreamHandler()
-log.addHandler(console)
-
-def start_servo():
-    # TODO: should daemonize 
-    ServoLoop().start()
+mytest = 1

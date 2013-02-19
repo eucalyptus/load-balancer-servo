@@ -20,8 +20,7 @@
 import os
 import subprocess
 import commands
-import servo
-from util import ServoError
+from servo.util import ServoError
 
 class HaproxyProcess(object):
     RUNNING=0
