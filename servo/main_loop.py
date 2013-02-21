@@ -33,12 +33,13 @@ class ServoLoop(object):
 
     def __init__(self):
         # get the instance id from metadata service
-        self.__instance_id = None
+        self.__instance_id = 'i-5CAC4274'
         self.__elb_host = config.get_clc_host() # TODO: should query user-data 
-        resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/instance-id")
-        if resp['status'] != '200' or len(content) <= 0:
-            raise Exception('could not query the metadata for instance id (%s,%s)' % (resp, content))
-        self.__instance_id = content
+        if self.__instance_id is None:
+            resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/instance-id")
+            if resp['status'] != '200' or len(content) <= 0:
+                raise Exception('could not query the metadata for instance id (%s,%s)' % (resp, content))
+            self.__instance_id = content
         self.__status = ServoLoop.STOPPED
         servo.log.debug('main loop running with elb_host=%s, instance_id=%s' % (self.__elb_host, self.__instance_id))
 

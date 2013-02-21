@@ -22,13 +22,13 @@ INSTALL_ROOT = "/root"# os.environ['SERVO_HOME']
 QUERY_PERIOD_SEC = 10
 
 def get_access_key_id():
-    return 'XZI553LGSDQFGEOLKQ0CH'  # TODO: IAM role
+    return '5OKTUB0YQPL1KLIGUCWXX'  # TODO: IAM role
 
 def get_secret_access_key():
-    return 'Awqmvo2XL3KWfEmbN4MI2l8zr0I76b5Cq85jZrbx' #TODO: IAM role
+    return 'JTYZHygfWzIpu4Kaz3LaEZ3JCVaQ8NjNNXQtGxCI' #TODO: IAM role
 
 def get_clc_host():
-    return '192.168.0.108' #TODO
+    return '10.111.1.67' #TODO
 
 def get_clc_port():
     return 8773 #TODO
