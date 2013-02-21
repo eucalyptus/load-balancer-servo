@@ -24,6 +24,7 @@ import servo.ws
 from servo.haproxy import ProxyManager
 from servo.haproxy.listener import Listener
 import servo.hostname_cache
+from collections import Iterable
 
 class ServoLoop(object):
     STOPPED = "stopped"
@@ -66,19 +67,21 @@ class ServoLoop(object):
                 try:
                     for lb in lbs:
                         instances = []
-                        for inst in lb.instances:
-                            instances.append(str(inst.id))
-                        for listener in lb.listeners:
-                            protocol=listener.protocol
-                            port=listener.load_balancer_port
-                            instance_port=listener.instance_port
-                            instance_protocol=None # TODO: boto doesn't have the field
-                            ssl_cert=None # TODO: not supported
-                            l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name)
-                            for inst_id in instances:
-                                hostname = servo.hostname_cache.get_hostname(inst_id)
-                                if hostname is not None: l.addInstance(hostname) 
-                            received.append(l)
+                        if lb.instances is not None and isinstance(lb.instances, Iterable):
+                            for inst in lb.instances:
+                                instances.append(str(inst.id))
+                        if lb.listeners is not None and isinstance(lb.listeners, Iterable) :
+                            for listener in lb.listeners:
+                                protocol=listener.protocol
+                                port=listener.load_balancer_port
+                                instance_port=listener.instance_port
+                                instance_protocol=None # TODO: boto doesn't have the field
+                                ssl_cert=None # TODO: not supported
+                                l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name)
+                                for inst_id in instances:
+                                    hostname = servo.hostname_cache.get_hostname(inst_id)
+                                    if hostname is not None: l.addInstance(hostname) 
+                                received.append(l)
 
                 except Exception, err:
                     servo.log.error('failed to receive listeners: %s' % err) 
