@@ -4,6 +4,8 @@
    # processname: load-balancer-servo
 case "$1" in
   start)
+      killall ntp
+      ntpdate 10.111.1.67
       if ps afx | grep $(</var/run/eucaservo/euca-balancer-servo.pid) | grep -v 'grep'; then
           echo "service already running"
           exit 1

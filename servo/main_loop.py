@@ -87,9 +87,8 @@ class ServoLoop(object):
                 except Exception, err:
                     servo.log.error('failed to receive listeners: %s' % err) 
                 try:
-                    if len(received) > 0:
-                        proxy_mgr.updateListeners(received)
-                        servo.log.debug('listener updated')
+                    proxy_mgr.updateListeners(received)
+                    servo.log.debug('listener updated')
                 except Exception, err:
                     servo.log.error('failed to update proxy listeners: %s' % err) 
         
