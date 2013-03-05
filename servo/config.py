@@ -15,26 +15,48 @@
 # Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
+import httplib2
+import servo
 
 RUN_ROOT = "/var/run/eucaservo"
 LOG_FILE = "/var/log/eucaservo.log"
 INSTALL_ROOT = "/root"# os.environ['SERVO_HOME']
 QUERY_PERIOD_SEC = 10
 
-def get_access_key_id():
-    return '5OKTUB0YQPL1KLIGUCWXX'  # TODO: IAM role
+user_data_store={}  
+def query_user_data():
+    resp, content = httplib2.Http().request("http://169.254.169.254/latest/user-data")
+    if resp['status'] != '200' or len(content) <= 0:
+        raise Exception('could not query the userdata')
+    #format of userdata = "key1=value1;key2=value2;..."
+    kvlist = content.split(';')
+    for word in kvlist:
+        kv = word.split('=')
+        if len(kv) == 2:
+            user_data_store[kv[0]]=kv[1] 
+
+def get_value(key):
+    if key in user_data_store:
+       return user_data_store[key]
+    else:
+        query_user_data()
+        if key not in user_data_store:
+            raise Exception('could not find %s' % key) 
+
+def get_access_key_id(): # After IAM roles, this will change
+    return get_value('access_key')
 
 def get_secret_access_key():
-    return 'JTYZHygfWzIpu4Kaz3LaEZ3JCVaQ8NjNNXQtGxCI' #TODO: IAM role
+    return get_value('secret_key')
 
 def get_clc_host():
-    return '10.111.1.67' #TODO
+    return get_value('eucalyptus_host')
 
 def get_clc_port():
-    return 8773 #TODO
+    return get_value('eucalyptus_port')
 
 def get_ec2_path():
-    return 'services/Eucalyptus' #TODO
+    return get_value('eucalyptus_path')
 
 def get_availability_zone():
-    return 'PARTI00' #TODO
+    return get_value('availability_zone')
