@@ -24,6 +24,7 @@ import servo.ws
 from servo.haproxy import ProxyManager
 from servo.haproxy.listener import Listener
 import servo.hostname_cache
+from collections import Iterable
 
 class ServoLoop(object):
     STOPPED = "stopped"
@@ -32,12 +33,13 @@ class ServoLoop(object):
 
     def __init__(self):
         # get the instance id from metadata service
-        self.__instance_id = None
+        self.__instance_id = 'i-5CAC4274'
         self.__elb_host = config.get_clc_host() # TODO: should query user-data 
-        resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/instance-id")
-        if resp['status'] != '200' or len(content) <= 0:
-            raise Exception('could not query the metadata for instance id (%s,%s)' % (resp, content))
-        self.__instance_id = content
+        if self.__instance_id is None:
+            resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/instance-id")
+            if resp['status'] != '200' or len(content) <= 0:
+                raise Exception('could not query the metadata for instance id (%s,%s)' % (resp, content))
+            self.__instance_id = content
         self.__status = ServoLoop.STOPPED
         servo.log.debug('main loop running with elb_host=%s, instance_id=%s' % (self.__elb_host, self.__instance_id))
 
@@ -66,26 +68,27 @@ class ServoLoop(object):
                 try:
                     for lb in lbs:
                         instances = []
-                        for inst in lb.instances:
-                            instances.append(str(inst.id))
-                        for listener in lb.listeners:
-                            protocol=listener.protocol
-                            port=listener.load_balancer_port
-                            instance_port=listener.instance_port
-                            instance_protocol=None # TODO: boto doesn't have the field
-                            ssl_cert=None # TODO: not supported
-                            l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name)
-                            for inst_id in instances:
-                                hostname = servo.hostname_cache.get_hostname(inst_id)
-                                if hostname is not None: l.addInstance(hostname) 
-                            received.append(l)
+                        if lb.instances is not None and isinstance(lb.instances, Iterable):
+                            for inst in lb.instances:
+                                instances.append(str(inst.id))
+                        if lb.listeners is not None and isinstance(lb.listeners, Iterable) :
+                            for listener in lb.listeners:
+                                protocol=listener.protocol
+                                port=listener.load_balancer_port
+                                instance_port=listener.instance_port
+                                instance_protocol=None # TODO: boto doesn't have the field
+                                ssl_cert=None # TODO: not supported
+                                l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name)
+                                for inst_id in instances:
+                                    hostname = servo.hostname_cache.get_hostname(inst_id)
+                                    if hostname is not None: l.addInstance(hostname) 
+                                received.append(l)
 
                 except Exception, err:
                     servo.log.error('failed to receive listeners: %s' % err) 
                 try:
-                    if len(received) > 0:
-                        proxy_mgr.updateListeners(received)
-                        servo.log.debug('listener updated')
+                    proxy_mgr.updateListeners(received)
+                    servo.log.debug('listener updated')
                 except Exception, err:
                     servo.log.error('failed to update proxy listeners: %s' % err) 
         
