@@ -35,31 +35,31 @@ class Listener(object):
         self.__ssl_cert = ssl_cert
         self.__instances = set() 
  
-    def getProtocol(self):
+    def protocol(self):
         return self.__protocol
     
-    def getPort(self):
+    def port(self):
         return self.__port
     
-    def getInstancePort(self):
+    def instance_port(self):
         return self.__instance_port
 
-    def getInstanceProtocol(self):
+    def instance_protocol(self):
         return self.__instance_protocol
 
-    def addInstance(self, hostname):
+    def add_instance(self, hostname):
         self.__instances.add(hostname)
 
-    def removeInstance(self, hostname):
+    def remove_instance(self, hostname):
         self.__instances.remove(hostname)
 
-    def hasInstance(self, hostname):
+    def has_instance(self, hostname):
         return hostname in self__instances
 
-    def getInstances(self):
+    def instances(self):
         return self.__instances
   
-    def getLoadbalancer(self):
+    def loadbalancer(self):
         return self.__loadbalancer
 
     def __eq__(self, other):

@@ -34,23 +34,23 @@ class ConfBuilder(object):
 
     def add(self, protocol, port, instances=[], comment=None):
         try:
-            self.addProtocolPort(protocol, port, comment )
+            self.add_protocol_port(protocol, port, comment )
             for instance in instances:
-                self.addBackend(port, instance)
+                self.add_backend(port, instance)
         except Exception, err:
             servo.log.error('failed to add protocol-port: %s' % err)
         return self
 
-    def addProtocolPort(self, protocol, port):
+    def add_protocol_port(self, protocol, port):
         raise NotImplementedError
   
-    def removeProtocolPort(self, port):
+    def remove_protocol_port(self, port):
         raise NotImplementedError
 
-    def addBackend(self, port, instance):
+    def add_backend(self, port, instance):
         raise NotImplementedError
 
-    def removeBackend(self, port, instance):
+    def remove_backend(self, port, instance):
         raise NotImplementedError
 
     def verify(self, listeners):
@@ -111,12 +111,12 @@ class ConfBuilderHaproxy(ConfBuilder):
              #  TODO: LOG ERROR
 
     @staticmethod
-    def parseKeyValue(line, delimiter=' '):
+    def parse_key_value(line, delimiter=' '):
         line = line.strip(' ')
         if len(line.split(delimiter)) == 2:
             return line.split(delimiter)[0], line.split(delimiter)[1]
     
-    def findFrontend(self, port):
+    def find_frontend(self, port):
         section_name = None
         section = []
         for key in self.__content_map.iterkeys():
@@ -126,17 +126,17 @@ class ConfBuilderHaproxy(ConfBuilder):
                 break
         return (section_name, section)
 
-    def findBackendName(self, section):
+    def find_backend_name(self, section):
         backend_name = None
         for line in section:
             if line.strip(' ').startswith('default_backend'):
-                kv = ConfBuilderHaproxy.parseKeyValue(line)
+                kv = ConfBuilderHaproxy.parse_key_value(line)
                 if kv is not None:
                     backend_name = kv[1]
                     break
         return backend_name
 
-    def addProtocolPort(self, protocol='tcp', port=80, comment=None):
+    def add_protocol_port(self, protocol='tcp', port=80, comment=None):
         '''
             add new protocol/port to the config file. if there's existing one, pass
         '''
@@ -165,15 +165,15 @@ class ConfBuilderHaproxy(ConfBuilder):
 
         return self
     
-    def removeProtocolPort(self, port):
+    def remove_protocol_port(self, port):
         '''
             remove existing port/protocol from the config if found
         '''
-        (section_name, section) = self.findFrontend(port)
+        (section_name, section) = self.find_frontend(port)
         if section_name is None:
             return self
         #remove the backend
-        backend_name = self.findBackendName(section)
+        backend_name = self.find_backend_name(section)
         if backend_name is not None:
             backend = 'backend %s' % backend_name 
             if backend in self.__content_map.iterkeys():
@@ -186,12 +186,12 @@ class ConfBuilderHaproxy(ConfBuilder):
         return self
 
     #instance = {hostname , port, protocol=None )
-    def addBackend(self, port, instance):
-        (section_name, section) = self.findFrontend(port)
+    def add_backend(self, port, instance):
+        (section_name, section) = self.find_frontend(port)
         if section_name is None:
             return self
         
-        backend_name = self.findBackendName(section)
+        backend_name = self.find_backend_name(section)
         if backend_name is None:
             return self
 
@@ -203,12 +203,12 @@ class ConfBuilderHaproxy(ConfBuilder):
         backend_conf.insert(0, line)
         return self
 
-    def removeBackend(self, port, instance):
-        section_name, section = self.findFrontend(port)
+    def remove_backend(self, port, instance):
+        section_name, section = self.find_frontend(port)
         if section_name is None:
             return self
         
-        backend_name = self.findBackendName(section)
+        backend_name = self.find_backend_name(section)
         if backend_name is None:
             return self
 

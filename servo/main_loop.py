@@ -63,7 +63,7 @@ class ServoLoop(object):
                 servo.log.warning('failed to find the loadbalancers')
             else:
                 # prepare Listener lists
-                # call updateListeners
+                # call update_listeners
                 received=[] 
                 try:
                     for lb in lbs:
@@ -81,13 +81,13 @@ class ServoLoop(object):
                                 l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name)
                                 for inst_id in instances:
                                     hostname = servo.hostname_cache.get_hostname(inst_id)
-                                    if hostname is not None: l.addInstance(hostname) 
+                                    if hostname is not None: l.add_instance(hostname) 
                                 received.append(l)
 
                 except Exception, err:
                     servo.log.error('failed to receive listeners: %s' % err) 
                 try:
-                    proxy_mgr.updateListeners(received)
+                    proxy_mgr.update_listeners(received)
                     servo.log.debug('listener updated')
                 except Exception, err:
                     servo.log.error('failed to update proxy listeners: %s' % err) 
@@ -103,5 +103,5 @@ class ServoLoop(object):
     def stop(self):
         self.__status = ServoLoop.STOPPING
 
-    def getStatus(self):
+    def status(self):
         return self.__status

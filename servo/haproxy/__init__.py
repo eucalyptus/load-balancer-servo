@@ -36,7 +36,7 @@ class ProxyManager(object):
         # delete old haproxy config (will be copied from the template)
         proxy.cleanup()
 
-    def updateListeners(self, listeners=[]):
+    def update_listeners(self, listeners=[]):
         to_add = []
         to_delete = [] 
         # find any listener that's updated
@@ -58,7 +58,7 @@ class ProxyManager(object):
         for add in to_add:
             proxy_actions.append(ProxyCreate(add))
         try:
-            ok = ProxyActionTransaction.getInstance(proxy_actions).run() 
+            ok = ProxyActionTransaction.instance(proxy_actions).run() 
         except Exception, error:
             servo.log.error('failed to update the listeners (%s)' % error)
             return self.__listeners
@@ -72,5 +72,5 @@ class ProxyManager(object):
 
         return self.__listeners
 
-    def getListeners(self):
+    def listeners(self):
          return self.__listeners
