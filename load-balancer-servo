@@ -21,12 +21,10 @@
 import os
 import sys
 import getopt
-import fcntl
-import signal
-import atexit
 import servo
 
 DEFAULT_PIDFILE = "/var/run/load-balancer-servo/load-balancer-servo.pid"
+pidfile = None
 
 
 def daemonize(func=None):
@@ -54,6 +52,11 @@ def daemonize(func=None):
 
     os.umask(027)
     os.chdir("/")
+
+    # Only import these if we're actually going to daemonize
+    import fcntl
+    import signal
+    import atexit
 
     # Create pidfile
     try:
@@ -85,7 +88,6 @@ def usage():
 
 if __name__ == "__main__":
     daemon = False
-    global pidfile = DEFAULT_PIDFILE
     try:
         opts, _ = getopt.getopt(sys.argv[1:],
             "hdp:", ["--help", "--daemonize", "--pidfile"])
@@ -100,7 +102,9 @@ if __name__ == "__main__":
         usage()
 
     if daemon:
-        daemonize(pidfile, servo.start_servo)
+        if not pidfile:
+            pidfile = DEFAULT_PIDFILE
+        daemonize(servo.start_servo)
     else:
         try:
             servo.log.info("Starting Loadbalancer Servo")
