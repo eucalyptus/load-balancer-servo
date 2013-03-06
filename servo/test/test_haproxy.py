@@ -20,10 +20,10 @@ mytest=1
 if __name__ == "__main__":
     print "TEST -- CREATE NEW LISTENER"  
     first = Listener(protocol='tcp', port=80, instance_port=80, loadbalancer='lb01')
-    first.addInstance('192.168.0.100')
+    first.add_instance('192.168.0.100')
     proxy = ProxyManager() 
-    proxy.updateListeners([first])
-    current = proxy.getListeners()
+    proxy.update_listeners([first])
+    current = proxy.listeners()
     if len(current) == 1 and first in current:
         print "PASSED: new listener added"
     else:
@@ -31,10 +31,10 @@ if __name__ == "__main__":
 
     print "TEST -- ADD NEW LISTENER"
     second = Listener(protocol='http', port=82, instance_port=80, loadbalancer='lb02')
-    second.addInstance('192.168.0.101')
-    second.addInstance('192.168.0.102')
-    proxy.updateListeners([first, second])
-    current = proxy.getListeners()
+    second.add_instance('192.168.0.101')
+    second.add_instance('192.168.0.102')
+    proxy.update_listeners([first, second])
+    current = proxy.listeners()
     if len(current) ==2 and first in current and second in current:
         print "PASSED: second listener added"
     else:
@@ -42,18 +42,18 @@ if __name__ == "__main__":
 
     print "TEST -- KEEP SAME LISTENERS"
     second_copy = Listener(protocol='http', port=82, instance_port=80, loadbalancer='lb02')
-    second_copy.addInstance('192.168.0.101')
-    second_copy.addInstance('192.168.0.102')
-    proxy.updateListeners([first, second_copy])
-    current = proxy.getListeners()
+    second_copy.add_instance('192.168.0.101')
+    second_copy.add_instance('192.168.0.102')
+    proxy.update_listeners([first, second_copy])
+    current = proxy.listeners()
     if len(current) ==2 and first in current and second in current:
         print "PASSED: second listener still in the list" 
     else:
         print "ERROR: second listener not added"
 
     print "TEST -- REMOVE LISTENER"
-    proxy.updateListeners([first])
-    current = proxy.getListeners()
+    proxy.update_listeners([first])
+    current = proxy.listeners()
     if len(current) ==1 and first in current:
         print "PASSED: second listener removed"
     else:
@@ -62,8 +62,8 @@ if __name__ == "__main__":
     print "TEST -- ADD MULTIPLE NEW LISTENER"
     third = Listener(protocol='http', port=83, instance_port=82, loadbalancer='lb03')
     fourth = Listener(protocol='http', port=84, instance_port=83, loadbalancer='lb04')
-    proxy.updateListeners([first, third, fourth])
-    current = proxy.getListeners()
+    proxy.update_listeners([first, third, fourth])
+    current = proxy.listeners()
     if len(current) == 3 and first in current and third in current and fourth in current:
         print "PASSED: third, fourth listener added"
     else:
@@ -71,9 +71,9 @@ if __name__ == "__main__":
 
     print "TEST -- MODIFY INSTANCE MEMBERSHIP"
     new_fourth = Listener(protocol='http', port=84, instance_port=83, loadbalancer='lb04')
-    new_fourth.addInstance('192.168.0.109')
-    proxy.updateListeners([first,third,new_fourth])
-    current = proxy.getListeners()
+    new_fourth.add_instance('192.168.0.109')
+    proxy.update_listeners([first,third,new_fourth])
+    current = proxy.listeners()
     if len(current) == 3 and first in current and third in current and new_fourth in current:
         print "PASSED: new instance added"
     else:

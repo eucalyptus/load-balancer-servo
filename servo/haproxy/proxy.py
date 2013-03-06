@@ -40,7 +40,7 @@ class ProxyActionTransaction(object):
         self._actions = actions
 
     @staticmethod
-    def getInstance(actions=[]):
+    def instance(actions=[]):
         return ProxyActionDefaultTransaction(actions)
 
     # queue and run periodcally? or run immediately?
@@ -77,7 +77,7 @@ class ProxyActionDefaultTransaction(ProxyActionTransaction):
          # kill and restart the haproxy process
          try:
              proc = HaproxyProcess(conf_file = CONF_FILE, pid_path=PID_PATH)
-             if proc.getStatus() == HaproxyProcess.TERMINATED:
+             if proc.status() == HaproxyProcess.TERMINATED:
                  proc.run() 
                  servo.log.debug("new haproxy process started")
              else:
@@ -129,14 +129,14 @@ class ProxyCreate(ProxyAction):
         builder = ConfBuilderHaproxy(CONF_FILE) 
         instances = []
 
-        for host in self.__listener.getInstances():
-            instance = {'hostname':host, 'port': self.__listener.getInstancePort(), 'protocol': self.__listener.getInstanceProtocol()}
+        for host in self.__listener.instances():
+            instance = {'hostname':host, 'port': self.__listener.instance_port(), 'protocol': self.__listener.instance_protocol()}
             instances.append(instance)
         try: 
             comment=None
-            if self.__listener.getLoadbalancer() is not None:
-                comment="lb-%s" % self.__listener.getLoadbalancer()
-            builder.add(protocol=self.__listener.getProtocol(), port=self.__listener.getPort(), instances=instances, comment=comment).build(CONF_FILE)
+            if self.__listener.loadbalancer() is not None:
+                comment="lb-%s" % self.__listener.loadbalancer()
+            builder.add(protocol=self.__listener.protocol(), port=self.__listener.port(), instances=instances, comment=comment).build(CONF_FILE)
         except Exception, err:
             self.__status =ProxyAction.STATUS_ERROR
             servo.log.error('failed to add new frontend to the config: %s' % err)
@@ -160,9 +160,9 @@ class ProxyRemove(ProxyAction):
         self.__status = ProxyAction.STATUS_PENDING 
     def run(self):
         builder = ConfBuilderHaproxy(CONF_FILE)
-        portToRemove = self.__listener.getPort()
+        portToRemove = self.__listener.port()
         try: 
-            builder.removeProtocolPort(portToRemove).build(CONF_FILE)
+            builder.remove_protocol_port(portToRemove).build(CONF_FILE)
         except Exception, err:
             servo.log.error("failed to remove the port from the haproxy config: %s" % err)
             self.__status =ProxyAction.STATUS_ERROR

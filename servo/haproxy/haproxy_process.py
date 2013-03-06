@@ -61,7 +61,7 @@ class HaproxyProcess(object):
             raise ServoError("failed to restart haproxy process")
         self.__status = HaproxyProcess.RUNNING
  
-    def getPID(self):
+    def pid(self):
         if not os.path.exists(self.__pid_path):
             raise "pid file is not found in %s" % self.__pid_path
         if subprocess.call('ps -p $(<$s)' % self.__pid_path, shell=True) != 0:
@@ -69,5 +69,5 @@ class HaproxyProcess(object):
         pid = commands.getoutput('cat %s' % self.__pid_path)
         return pid
 
-    def getStatus(self):
+    def status(self):
         return self.__status
