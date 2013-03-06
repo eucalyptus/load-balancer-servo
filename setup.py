@@ -23,16 +23,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from distutils.core import setup
+from distutils.core import setup, Command
+from distutils.command.install import install as _install
 import glob
 import os
 
-DATA_DIR='/usr/share/load-balancer-servo'
 VERSION_FILE='VERSION'
 
 def getVersion():
     try:
-        with open(VERSION_FILE, 'r') as version_data:
+        with open(VERSION_FILE) as version_data:
             return version_data.read().rstrip()
     except IOError:
         return "0"
@@ -46,6 +46,7 @@ setup (name="Eucalyptus Loadbalancer Servo",
     license = "GPL v3",
     url = "http://www.eucalytpus.com",
     packages = ['servo', 'servo/haproxy', 'servo/ws'],
-    scripts = ['euca-balancer-servo']
+    scripts = ['load-balancer-servo'],
+    data_files = [('/etc/load-balancer-servo/', ['haproxy_template.conf'])],
 )
 

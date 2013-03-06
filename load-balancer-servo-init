@@ -1,0 +1,64 @@
+#!/bin/hs
+
+### BEGIN INIT INFO
+# Provides:          load-balancer-servo
+# Required-Start:    $network $remote_fs
+# Required-Stop:     $network $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Eucalyptus LoadBalancer Servo
+# Description:       Eucalyptus LoadBalancer Servo
+### END INIT INFO
+
+. /etc/rc.d/init.d/functions
+
+SERVICE=load-balancer-servo
+PROCESS=load-balancer-servo
+PIDFILE=/var/run/load-balancer-servo/load-balancer-servo.pid
+SERVOUSER=servo
+
+LOCKFILE=/var/lock/subsys/load-balancer-servo
+
+start() {
+    echo -n $"Starting $SERVICE: "
+    daemon --user=$SERVOUSER --pidfile=$PIDFILE $PROCESS -d -p $PIDFILE
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch $LOCKFILE
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $SERVICE: "
+    killproc -p $PIDFILE $PROCESS
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
+    [ -f $PIDFILE ] && rm -f $PIDFILE
+}
+
+restart() {
+    stop
+    start
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  status)
+    status -p $PIDFILE $PROCESS
+    ;;
+  restart)
+    restart
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|restart|status}"
+    exit 2
+esac
+exit $RETVAL
+

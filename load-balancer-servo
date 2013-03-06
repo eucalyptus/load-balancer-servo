@@ -1,0 +1,111 @@
+#!/usr/bin/python -tt
+#
+# Copyright 2009-2013 Eucalyptus Systems, Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/.
+#
+# Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
+# CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
+# additional information or have any questions.
+
+import os
+import sys
+import getopt
+import fcntl
+import signal
+import atexit
+import servo
+
+DEFAULT_PIDFILE = "/var/run/load-balancer-servo/load-balancer-servo.pid"
+
+
+def daemonize(func=None):
+    # Fork process
+    procid = os.fork()
+    if procid < 0:
+        sys.exit(1)
+    elif procid > 0:
+        sys.exit(0)
+    procid = os.setsid()
+    if procid == -1:
+        sys.exit(1)
+
+    # Close open file descriptors
+    for fd  in (0, 1, 2):
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+
+    # Point descriptors to /dev/null
+    os.open("/dev/null", os.O_RDWR)
+    os.dup(0)
+    os.dup(0)
+
+    os.umask(027)
+    os.chdir("/")
+
+    # Create pidfile
+    try:
+        f = open(pidfile, "w")
+        fcntl.lockf(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        f.write(str(os.getpid()))
+        f.flush()
+    except IOError:
+        sys.exit(1)
+
+    signal.signal(signal.SIGTERM, cleanpid)
+    atexit.register(cleanpid)
+
+    if func:
+        func()
+
+
+def cleanpid(signum=None, action=None):
+    os.remove(pidfile)
+    sys.exit(0)
+
+
+def usage():
+    print """
+    %s [-d | --daemonize] [-p | --pidfile]
+    """ % (os.path.basename(sys.argv[0]))
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    daemon = False
+    global pidfile = DEFAULT_PIDFILE
+    try:
+        opts, _ = getopt.getopt(sys.argv[1:],
+            "hdp:", ["--help", "--daemonize", "--pidfile"])
+        for arg, value in opts:
+            if arg == "-d" or arg == "--daemonize":
+                daemon = True
+            elif arg == "-p" or arg == "--pidfile":
+                pidfile = value
+            elif arg == "-h" or arg == "--help":
+                usage()
+    except getopt.GetoptError:
+        usage()
+
+    if daemon:
+        daemonize(pidfile, servo.start_servo)
+    else:
+        try:
+            servo.log.info("Starting Loadbalancer Servo")
+            servo.start_servo()
+        except KeyboardInterrupt:
+            servo.log.info("Interrupted By User")
+            sys.exit(0)
+
