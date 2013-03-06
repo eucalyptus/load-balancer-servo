@@ -23,7 +23,7 @@ import sys
 import getopt
 import servo
 
-DEFAULT_PIDFILE = "/var/run/load-balancer-servo/load-balancer-servo.pid"
+# Must make this global so it is available to the pid cleanup callback
 pidfile = None
 
 
@@ -53,7 +53,7 @@ def daemonize(func=None):
     os.umask(027)
     os.chdir("/")
 
-    # Only import these if we're actually going to daemonize
+    # Import here since these are only necessary if we daemonize
     import fcntl
     import signal
     import atexit
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
     if daemon:
         if not pidfile:
-            pidfile = DEFAULT_PIDFILE
+            pidfile = servo.config.DEFAULT_PIDFILE
         daemonize(servo.start_servo)
     else:
         try:
