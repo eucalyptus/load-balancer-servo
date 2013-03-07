@@ -10,7 +10,7 @@ mkdir -p build/{BUILD,BUILDROOT,SRPMS,RPMS,SOURCES,SPECS}
 
 cp *.spec build/SPECS
 
-git archive --format=tgz --prefix=$TARBALL_NAME/ HEAD > build/SOURCES/$TARBALL_NAME.tar.gz
+git archive --format=tar --prefix=$TARBALL_NAME/ HEAD | gzip > build/SOURCES/$TARBALL_NAME.tar.gz
 
 rpmbuild --define "_topdir `pwd`/build" --define "dist .el6" \
     -bs build/SPECS/load-balancer-servo.spec
