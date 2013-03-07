@@ -15,13 +15,26 @@
 # Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
+import os
 import httplib2
 import servo
 
-RUN_ROOT = "/var/run/eucaservo"
-LOG_FILE = "/var/log/eucaservo.log"
-INSTALL_ROOT = "/root"# os.environ['SERVO_HOME']
+DEFAULT_PID_ROOT = "/var/run/load-balancer-servo"
+DEFAULT_PIDFILE = os.path.join(DEFAULT_PID_ROOT, "servo.pid")
+CONF_ROOT = "/etc/load-balancer-servo"
+RUN_ROOT = "/var/lib/load-balancer-servo"
+LOG_FILE = "/var/log/load-balancer-servo/servo.log"
 QUERY_PERIOD_SEC = 10
+
+# Apply default values in case user does not specify
+pidfile = DEFAULT_PIDFILE
+pidroot = DEFAULT_PID_ROOT
+
+def set_pidfile(filename):
+    global pidfile
+    global pidroot
+    pidfile = filename
+    pidroot = os.path.dirname(pidfile)
 
 user_data_store={}  
 def query_user_data():

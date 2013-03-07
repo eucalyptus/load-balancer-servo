@@ -22,9 +22,7 @@ import os
 import sys
 import getopt
 import servo
-
-# Must make this global so it is available to the pid cleanup callback
-pidfile = None
+import servo.config as config
 
 
 def daemonize(func=None):
@@ -60,11 +58,12 @@ def daemonize(func=None):
 
     # Create pidfile
     try:
-        f = open(pidfile, "w")
+        f = open(config.pidfile, "w")
         fcntl.lockf(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         f.write(str(os.getpid()))
         f.flush()
     except IOError:
+        servo.log.error("Failed to write pidfile %s", config.pidfile)
         sys.exit(1)
 
     signal.signal(signal.SIGTERM, cleanpid)
@@ -76,7 +75,7 @@ def daemonize(func=None):
 
 
 def cleanpid(signum=None, action=None):
-    os.remove(pidfile)
+    os.remove(config.pidfile)
     sys.exit(0)
 
 
@@ -96,15 +95,13 @@ if __name__ == "__main__":
             if arg == "-d" or arg == "--daemonize":
                 daemon = True
             elif arg == "-p" or arg == "--pidfile":
-                pidfile = value
+                config.set_pidfile(value)
             elif arg == "-h" or arg == "--help":
                 usage()
     except getopt.GetoptError:
         usage()
 
     if daemon:
-        if not pidfile:
-            pidfile = servo.config.DEFAULT_PIDFILE
         daemonize(servo.start_servo)
     else:
         try:

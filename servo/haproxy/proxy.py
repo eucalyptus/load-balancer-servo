@@ -17,7 +17,7 @@
 # additional information or have any questions.
 import servo
 from servo.util import TimeoutError
-from servo.config import RUN_ROOT, INSTALL_ROOT
+import servo.config as config
 from listener import Listener
 import os
 import shutil
@@ -26,9 +26,9 @@ import sys
 from haproxy_conf import ConfBuilderHaproxy
 from haproxy_process import HaproxyProcess
 
-CONF_FILE = RUN_ROOT+"/euca_haproxy.conf"
-CONF_FILE_TEMPLATE = INSTALL_ROOT+"/haproxy_template.conf"
-PID_PATH = RUN_ROOT+"/haproxy.pid"
+CONF_FILE = os.path.join(config.RUN_ROOT, "euca_haproxy.conf")
+CONF_FILE_TEMPLATE = os.path.join(config.CONF_ROOT, "haproxy_template.conf")
+PID_PATH = os.path.join(config.pidroot, "haproxy.pid")
 
 def cleanup():
     try:
@@ -76,7 +76,7 @@ class ProxyActionDefaultTransaction(ProxyActionTransaction):
 
          # kill and restart the haproxy process
          try:
-             proc = HaproxyProcess(conf_file = CONF_FILE, pid_path=PID_PATH)
+             proc = HaproxyProcess(haproxy_bin='sudo /usr/sbin/haproxy', conf_file=CONF_FILE, pid_path=PID_PATH)
              if proc.status() == HaproxyProcess.TERMINATED:
                  proc.run() 
                  servo.log.debug("new haproxy process started")

@@ -17,12 +17,11 @@
 # additional information or have any questions.
 import logging
 import logging.config
-from servo.config import LOG_FILE
+from servo.config import LOG_FILE, set_pidfile
 from servo.main_loop import ServoLoop
 
 __version__ = '1.0.0-dev'
 Version = __version__
-
 
 class NullHandler(logging.Handler):
     def emit(self, record):
