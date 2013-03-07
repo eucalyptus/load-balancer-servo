@@ -1,4 +1,4 @@
-#!/bin/hs
+#!/bin/sh
 
 ### BEGIN INIT INFO
 # Provides:          load-balancer-servo
@@ -13,8 +13,8 @@
 . /etc/rc.d/init.d/functions
 
 SERVICE=load-balancer-servo
-PROCESS=load-balancer-servo
-PIDFILE=/var/run/load-balancer-servo/load-balancer-servo.pid
+PROCESS=/usr/bin/load-balancer-servo
+PIDFILE=/var/run/load-balancer-servo/servo.pid
 SERVOUSER=servo
 
 LOCKFILE=/var/lock/subsys/load-balancer-servo

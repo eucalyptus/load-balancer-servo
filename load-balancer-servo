@@ -71,6 +71,7 @@ def daemonize(func=None):
     atexit.register(cleanpid)
 
     if func:
+        servo.log.info("Starting daemonized servo process")
         func()
 
 
