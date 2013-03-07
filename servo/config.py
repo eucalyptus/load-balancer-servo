@@ -30,6 +30,9 @@ QUERY_PERIOD_SEC = 10
 pidfile = DEFAULT_PIDFILE
 pidroot = DEFAULT_PID_ROOT
 
+# Update pidfile and pidroot variables in global scope.
+# This is called if the user has chosen to use a custom
+# pidfile location from the command line.
 def set_pidfile(filename):
     global pidfile
     global pidroot
