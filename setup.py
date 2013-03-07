@@ -23,17 +23,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from distutils.core import setup, Command
-from distutils.command.install import install as _install
-import glob
-import os
-
-VERSION_FILE='VERSION'
+from distutils.core import setup
 
 def getVersion():
     try:
-        with open(VERSION_FILE) as version_data:
-            return version_data.read().rstrip()
+        return open('VERSION').read().rstrip()
     except IOError:
         return "0"
 
