@@ -24,6 +24,8 @@ DEFAULT_PIDFILE = os.path.join(DEFAULT_PID_ROOT, "servo.pid")
 CONF_ROOT = "/etc/load-balancer-servo"
 RUN_ROOT = "/var/lib/load-balancer-servo"
 LOG_FILE = "/var/log/load-balancer-servo/servo.log"
+HAPROXY_BIN="/usr/sbin/haproxy"
+
 QUERY_PERIOD_SEC = 10
 
 # Apply default values in case user does not specify
@@ -58,6 +60,7 @@ def get_value(key):
         query_user_data()
         if key not in user_data_store:
             raise Exception('could not find %s' % key) 
+        return user_data_store[key]
 
 def get_access_key_id(): # After IAM roles, this will change
     return get_value('access_key')

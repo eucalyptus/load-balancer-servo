@@ -33,7 +33,7 @@ class ServoLoop(object):
 
     def __init__(self):
         # get the instance id from metadata service
-        self.__instance_id = 'i-5CAC4274'
+        self.__instance_id = None
         self.__elb_host = config.get_clc_host() # TODO: should query user-data 
         if self.__instance_id is None:
             resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/instance-id")

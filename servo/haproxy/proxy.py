@@ -29,11 +29,15 @@ from haproxy_process import HaproxyProcess
 CONF_FILE = os.path.join(config.RUN_ROOT, "euca_haproxy.conf")
 CONF_FILE_TEMPLATE = os.path.join(config.CONF_ROOT, "haproxy_template.conf")
 PID_PATH = os.path.join(config.pidroot, "haproxy.pid")
-
 def cleanup():
     try:
        os.unlink(CONF_FILE)
-    except: pass
+       servo.log.debug("old haproxy config file is deleted")
+    except Exception, err: 
+       servo.log.error("could not delete the old haproxy config: %s" % err) 
+
+class ProxyError(Exception):
+    pass
 
 class ProxyActionTransaction(object):
     def __init__(self, actions=[]):
@@ -76,7 +80,7 @@ class ProxyActionDefaultTransaction(ProxyActionTransaction):
 
          # kill and restart the haproxy process
          try:
-             proc = HaproxyProcess(haproxy_bin='sudo /usr/sbin/haproxy', conf_file=CONF_FILE, pid_path=PID_PATH)
+             proc = HaproxyProcess(haproxy_bin=config.HAPROXY_BIN, conf_file=CONF_FILE, pid_path=PID_PATH)
              if proc.status() == HaproxyProcess.TERMINATED:
                  proc.run() 
                  servo.log.debug("new haproxy process started")
