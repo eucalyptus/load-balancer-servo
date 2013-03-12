@@ -61,8 +61,15 @@ class HaproxyProcess(object):
         self.__status = HaproxyProcess.RUNNING
 
     def terminate(self):
+        kill_args = [self.__pid_path]
+        kill_cmd = 'kill -9 $(<%s)' 
+
+        if self.__use_sudo:
+            kill_args.insert(0, SUDO_BIN)
+            kill_cmd = '%s -n -- ' + kill_cmd
+
         if os.path.isfile(self.__pid_path):
-            subprocess.call('kill -9 $(<%s)' % self.__pid_path, shell=True)
+            subprocess.call(kill_cmd % tuple(kill_args), shell=True)
         if subprocess.call('ps ax | grep haproxy | grep -v grep', shell=True) == 0:
             raise ServoError("haproxy still running")
         self.__status = HaproxyProcess.TERMINATED

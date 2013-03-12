@@ -56,7 +56,7 @@ install -m 0440 scripts/servo-sudoers.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sudoer
 
 mkdir -p $RPM_BUILD_ROOT/%{_initddir}
 install -m 755 scripts/load-balancer-servo-init $RPM_BUILD_ROOT/%{_initddir}/load-balancer-servo
-install -m 700 -d $RPM_BUILD_ROOT/%{_var}/{run,lib,log}/load-balancer-servo
+install -m 6700 -d $RPM_BUILD_ROOT/%{_var}/{run,lib,log}/load-balancer-servo
 
 %clean
 rm -rf $RPM_BUILD_ROOT
