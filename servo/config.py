@@ -24,7 +24,8 @@ DEFAULT_PIDFILE = os.path.join(DEFAULT_PID_ROOT, "servo.pid")
 CONF_ROOT = "/etc/load-balancer-servo"
 RUN_ROOT = "/var/lib/load-balancer-servo"
 LOG_FILE = "/var/log/load-balancer-servo/servo.log"
-HAPROXY_BIN="/usr/sbin/haproxy"
+HAPROXY_BIN = "/usr/sbin/haproxy"
+SUDO_BIN = "/usr/bin/sudo"
 
 QUERY_PERIOD_SEC = 10
 

@@ -80,7 +80,7 @@ class ProxyActionDefaultTransaction(ProxyActionTransaction):
 
          # kill and restart the haproxy process
          try:
-             proc = HaproxyProcess(haproxy_bin=config.HAPROXY_BIN, conf_file=CONF_FILE, pid_path=PID_PATH)
+             proc = HaproxyProcess(haproxy_bin=config.HAPROXY_BIN, conf_file=CONF_FILE, pid_path=PID_PATH, use_sudo=True)
              if proc.status() == HaproxyProcess.TERMINATED:
                  proc.run() 
                  servo.log.debug("new haproxy process started")

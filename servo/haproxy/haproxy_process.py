@@ -21,15 +21,17 @@ import os
 import subprocess
 import commands
 from servo.util import ServoError
+from servo.config import SUDO_BIN
 
 class HaproxyProcess(object):
     RUNNING=0
     TERMINATED=1
 
-    def __init__(self, haproxy_bin='/usr/local/sbin/haproxy', conf_file=None, pid_path=None):
+    def __init__(self, haproxy_bin='/usr/local/sbin/haproxy', conf_file=None, pid_path=None, use_sudo=False):
         self.__conf_file=conf_file
         self.__pid_path=pid_path
         self.__haproxy_bin = haproxy_bin
+        self.__use_sudo = use_sudo
         if not os.path.exists(haproxy_bin):
             raise ServoError("%s not found in the system" % haproxy_bin)
         if not os.path.exists(conf_file):
@@ -43,8 +45,18 @@ class HaproxyProcess(object):
         # make sure no other haproxy process running
         if self.__status == HaproxyProcess.RUNNING or subprocess.call('ps ax | grep haproxy | grep -v grep', shell=True) == 0:
             raise ServoError("haproxy already running")
+
+        haproxy_cmd = '%s -f %s -p %s -V -D'
+        haproxy_args = (self.__haproxy_bin, self.__conf_file, self.__pid_path)
+
+        # Insert sudo command if we are using sudo.  The '-n' argument is
+        # included so if we are prompted for a password, the command will
+        # return an error code instead of prompting us.
+        if self.__use_sudo:
+            haproxy_args.insert(0, SUDO_BIN)
+            haproxy_cmd = '%s -n ' + haproxy_cmd
         
-        if subprocess.call('%s -f %s -p %s -V -D' % (self.__haproxy_bin, self.__conf_file, self.__pid_path), shell=True) != 0:
+        if subprocess.call(haproxy_cmd % haproxy_args, shell=True) != 0:
             raise ServoError("failed to launch haproxy process")
         self.__status = HaproxyProcess.RUNNING
 

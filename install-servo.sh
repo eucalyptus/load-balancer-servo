@@ -25,12 +25,12 @@
 python setup.py install
 
 # Setup servo user
-useradd -s /sbin/nologin -d /var/lib/load-balancer-servo servo
-install -v -m 0440 scripts/servo-sudoers.conf /etc/sudoers.d/
+useradd -s /sbin/nologin -d /var/lib/load-balancer-servo -M servo
+install -v -m 0440 scripts/servo-sudoers.conf /etc/sudoers.d/servo
 
 # Setup needed for servo service
 install -v -m 755 scripts/load-balancer-servo-init /etc/init.d/load-balancer-servo
-install -v -m 700 -o servo -g servo -d /var/{run,log}/load-balancer-servo
+install -v -m 700 -o servo -g servo -d /var/{run,lib,log}/load-balancer-servo
 chown servo:servo -R /etc/load-balancer-servo
 chmod 700 /etc/load-balancer-servo
 

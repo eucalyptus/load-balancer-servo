@@ -47,10 +47,16 @@ rm -rf $RPM_BUILD_ROOT
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sudoers.d/
-install -m 0440 scripts/servo-sudoers.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sudoers.d/
+
+#
+# There is no extension on the installed sudoers file for a reason
+# It will only be read by sudo if there is *no* extension
+#
+install -m 0440 scripts/servo-sudoers.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sudoers.d/servo
+
 mkdir -p $RPM_BUILD_ROOT/%{_initddir}
 install -m 755 scripts/load-balancer-servo-init $RPM_BUILD_ROOT/%{_initddir}/load-balancer-servo
-install -m 700 -d $RPM_BUILD_ROOT/%{_var}/{run,log}/load-balancer-servo
+install -m 700 -d $RPM_BUILD_ROOT/%{_var}/{run,lib,log}/load-balancer-servo
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -58,7 +64,7 @@ rm -rf $RPM_BUILD_ROOT
 %pre
 getent passwd servo >/dev/null || \
     useradd -d /var/lib/load-balancer-servo \
-    -s /sbin/nologin servo
+    -M -s /sbin/nologin servo
 
 # Stop running services for upgrade
 if [ "$1" = "2" ]; then
@@ -77,6 +83,7 @@ fi
 %dir %{_sysconfdir}/load-balancer-servo
 %dir %{_var}/run/load-balancer-servo
 %dir %{_var}/log/load-balancer-servo
+%dir %{_var}/lib/load-balancer-servo
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/haproxy_template.conf
 
 %changelog
