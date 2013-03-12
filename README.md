@@ -14,9 +14,10 @@ Prerequisites
 In order to use *load-balancer-servo*, you will need a few things:
 
 * A Eucalyptus EMI on which to install the service
-* HAProxy 1.5-dev17 or newer installed in the EMI
-* python-boto
+* HAProxy >= 1.5-dev17
+* python-boto >= 2.8.0
 * python-httplib2
+* sudo
 
 Installing from the repository
 ------------------------------
