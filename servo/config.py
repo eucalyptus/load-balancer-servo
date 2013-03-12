@@ -72,7 +72,11 @@ def get_clc_host():
     return get_value('eucalyptus_host')
 
 def get_clc_port():
-    return get_value('eucalyptus_port')
+    val=get_value('eucalyptus_port')
+    if val is not None:
+        return int(val)
+    else:
+        return val
 
 def get_ec2_path():
     return get_value('eucalyptus_path')
