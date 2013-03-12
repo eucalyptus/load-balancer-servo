@@ -21,7 +21,7 @@ import os
 import subprocess
 import commands
 from servo.util import ServoError
-from servo.config import SUDO_BIN
+from servo.config import SUDO_BIN, RUN_ROOT
 
 class HaproxyProcess(object):
     RUNNING=0
@@ -46,22 +46,23 @@ class HaproxyProcess(object):
         if self.__status == HaproxyProcess.RUNNING or subprocess.call('ps ax | grep haproxy | grep -v grep', shell=True) == 0:
             raise ServoError("haproxy already running")
 
-        haproxy_cmd = '%s -f %s -p %s -V -D'
-        haproxy_args = (self.__haproxy_bin, self.__conf_file, self.__pid_path)
+        haproxy_cmd = '%s -f %s -p %s -V -C %s -D'
+        haproxy_args = [self.__haproxy_bin, self.__conf_file, self.__pid_path, RUN_ROOT]
 
         # Insert sudo command if we are using sudo.  The '-n' argument is
         # included so if we are prompted for a password, the command will
         # return an error code instead of prompting us.
         if self.__use_sudo:
             haproxy_args.insert(0, SUDO_BIN)
-            haproxy_cmd = '%s -n ' + haproxy_cmd
+            haproxy_cmd = '%s -n -- ' + haproxy_cmd
         
-        if subprocess.call(haproxy_cmd % haproxy_args, shell=True) != 0:
+        if subprocess.call(haproxy_cmd % tuple(haproxy_args), shell=True) != 0:
             raise ServoError("failed to launch haproxy process")
         self.__status = HaproxyProcess.RUNNING
 
     def terminate(self):
-        subprocess.call('kill -9 $(<%s)' % self.__pid_path, shell=True)
+        if os.path.isfile(self.__pid_path):
+            subprocess.call('kill -9 $(<%s)' % self.__pid_path, shell=True)
         if subprocess.call('ps ax | grep haproxy | grep -v grep', shell=True) == 0:
             raise ServoError("haproxy still running")
         self.__status = HaproxyProcess.TERMINATED
@@ -69,7 +70,18 @@ class HaproxyProcess(object):
     def restart(self):
         if subprocess.call('ps ax | grep haproxy | grep -v grep', shell=True) != 0:
             servo.log.warning('on restart, no running haproxy process found')
-        if subprocess.call('%s -f %s -p %s -V -D -sf $(<%s)' % (self.__haproxy_bin, self.__conf_file, self.__pid_path, self.__pid_path), shell=True) != 0:
+
+        haproxy_cmd = '%s -f %s -p %s -V -C %s -D -sf $(<%s)' 
+        haproxy_args = [self.__haproxy_bin, self.__conf_file, self.__pid_path, RUN_ROOT, self.__pid_path]
+
+        # Insert sudo command if we are using sudo.  The '-n' argument is
+        # included so if we are prompted for a password, the command will
+        # return an error code instead of prompting us.
+        if self.__use_sudo:
+            haproxy_args.insert(0, SUDO_BIN)
+            haproxy_cmd = '%s -n -- ' + haproxy_cmd
+
+        if subprocess.call(haproxy_cmd % tuple(haproxy_args), shell=True) != 0:
             raise ServoError("failed to restart haproxy process")
         self.__status = HaproxyProcess.RUNNING
  

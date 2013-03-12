@@ -73,7 +73,7 @@ def get_clc_host():
     return get_value('eucalyptus_host')
 
 def get_clc_port():
-    return get_value('eucalyptus_port')
+    return int(get_value('eucalyptus_port'))
 
 def get_ec2_path():
     return get_value('eucalyptus_path')
