@@ -75,7 +75,7 @@ fi
 %defattr(-,root,root,-)
 %{python_sitelib}/*
 %{_bindir}/load-balancer-servo
-%{_sysconfdir}/sudoers.d/servo-sudoers.conf
+%{_sysconfdir}/sudoers.d/servo
 %{_initddir}/load-balancer-servo
 %doc README.md LICENSE
 
