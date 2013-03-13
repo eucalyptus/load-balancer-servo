@@ -19,6 +19,15 @@
 # additional information or have any questions.
 
 TARBALL_NAME=load-balancer-servo-1.0.0
+BUILD_NUMBER=${BUILD_NUMBER:-0}
+
+if [ -z "$GIT_COMMIT" ]; then
+    GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
+else
+    GIT_COMMIT_SHORT=${GIT_COMMIT:0:7}
+fi
+
+BUILD_ID=$BUILD_NUMBER.$(date +%y%m%d)git${GIT_COMMIT_SHORT}
 
 [ -d ./build ] && rm -rf build
 
@@ -31,6 +40,7 @@ cp *.spec build/SPECS
 git archive --format=tar --prefix=$TARBALL_NAME/ HEAD | gzip > build/SOURCES/$TARBALL_NAME.tar.gz
 
 rpmbuild --define "_topdir `pwd`/build" --define "dist .el6" \
+    --define "build_id $BUILD_ID" \
     -bs build/SPECS/load-balancer-servo.spec
 
 mv build/SRPMS/*.src.rpm .
