@@ -84,3 +84,13 @@ def get_ec2_path():
 
 def get_availability_zone():
     return get_value('availability_zone')
+
+__servo_id = None
+def get_servo_id():
+    global __servo_id 
+    if __servo_id is None:
+        resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/instance-id")
+        if resp['status'] != '200' or len(content) <= 0:
+            raise Exception('could not query the metadata for instance id (%s,%s)' % (resp, content))
+        __servo_id = content
+    return __servo_id

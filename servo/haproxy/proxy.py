@@ -34,7 +34,8 @@ def cleanup():
        os.unlink(CONF_FILE)
        servo.log.debug("old haproxy config file is deleted")
     except Exception, err: 
-       servo.log.error("could not delete the old haproxy config: %s" % err) 
+       if os.path.exists(CONF_FILE):
+           servo.log.error("could not delete the old haproxy config: %s" % err) 
 
 class ProxyError(Exception):
     pass

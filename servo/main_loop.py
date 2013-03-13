@@ -17,13 +17,15 @@
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
 import time
-import httplib2
 import config
 import servo
 import servo.ws
 from servo.haproxy import ProxyManager
 from servo.haproxy.listener import Listener
 import servo.hostname_cache
+import servo.health_check as health_check
+from servo.health_check import HealthCheckConfig, HealthCheckManager
+
 from collections import Iterable
 
 class ServoLoop(object):
@@ -36,10 +38,8 @@ class ServoLoop(object):
         self.__instance_id = None
         self.__elb_host = config.get_clc_host() # TODO: should query user-data 
         if self.__instance_id is None:
-            resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/instance-id")
-            if resp['status'] != '200' or len(content) <= 0:
-                raise Exception('could not query the metadata for instance id (%s,%s)' % (resp, content))
-            self.__instance_id = content
+            self.__instance_id = config.get_servo_id()
+
         self.__status = ServoLoop.STOPPED
         servo.log.debug('main loop running with elb_host=%s, instance_id=%s' % (self.__elb_host, self.__instance_id))
 
@@ -51,6 +51,7 @@ class ServoLoop(object):
         # periodically
         self.__status = ServoLoop.RUNNING 
         proxy_mgr = ProxyManager()
+        hc_mgr = HealthCheckManager()
         while self.__status == ServoLoop.RUNNING:
             # call elb-describe-services
             lbs = None
@@ -67,10 +68,28 @@ class ServoLoop(object):
                 received=[] 
                 try:
                     for lb in lbs:
+                        if lb.health_check is not None:
+                            interval = lb.health_check.interval
+                            healthy_threshold = lb.health_check.healthy_threshold
+                            unhealthy_threshold = lb.health_check.unhealthy_threshold
+                            timeout = lb.health_check.timeout
+                            target = lb.health_check.target
+                            if interval is None or healthy_threshold is None or unhealthy_threshold is None or timeout is None or  target is None: 
+                                pass
+                            else:
+                                hc = HealthCheckConfig(interval, healthy_threshold, unhealthy_threshold, timeout, target)
+                                if health_check.health_check_config is None or health_check.health_check_config != hc:
+                                    health_check.health_check_config = hc
+                                    servo.log.info('new health check config: %s' % hc)
+                                    hc_mgr.reset()
                         instances = []
                         if lb.instances is not None and isinstance(lb.instances, Iterable):
                             for inst in lb.instances:
                                 instances.append(str(inst.id))
+
+                        if len(instances) > 0: 
+                            hc_mgr.set_instances(instances)
+ 
                         if lb.listeners is not None and isinstance(lb.listeners, Iterable) :
                             for listener in lb.listeners:
                                 protocol=listener.protocol
@@ -83,7 +102,6 @@ class ServoLoop(object):
                                     hostname = servo.hostname_cache.get_hostname(inst_id)
                                     if hostname is not None: l.add_instance(hostname) 
                                 received.append(l)
-
                 except Exception, err:
                     servo.log.error('failed to receive listeners: %s' % err) 
                 try:

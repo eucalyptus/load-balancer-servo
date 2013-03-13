@@ -8,6 +8,29 @@ def connect_elb(host_name=None, port=8773, cluster=None, path="services/LoadBala
     
     return EucaELBConnection(region=region, port=port, path=path, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, **kwargs)
 
+class StatefulInstance(object):
+    def __init__(self, instance_id=None, state=None):
+        self.instance_id = instance_id
+        self.state = state
+
+    def __repr__(self):
+        return '%s:%s' % (self.instance_id, self.state)
+
+    def __str__(self):
+        return self.__repr__()
+
+    def startElement(self, name, attrs, connection):
+        return None
+ 
+    def endElement(self, name, value, connection):
+        if name == 'InstanceId':
+            self.instance_id = value
+        elif name == 'InstanceState':
+            self.instance_state = value
+        else:
+            setattr(self, name, value)
+
+
 class EucaELBConnection(ELBConnection):
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None,
                  is_secure=False, port=None, proxy=None, proxy_port=None,
@@ -39,7 +62,7 @@ class EucaELBConnection(ELBConnection):
         """
         params = {'InstanceId':servo_instance_id}
         if instances:
-            self.build_list_params(params, instances, 'Instances.member.%d')
+            self.build_list_params(params, instances, 'Instances.member.%d.InstanceId')
         return self.get_status('PutServoStates', params)
 
     def get_servo_load_balancers(self, servo_instance_id):
