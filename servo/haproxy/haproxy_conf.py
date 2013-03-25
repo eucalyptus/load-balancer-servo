@@ -18,6 +18,7 @@
 
 import os
 import servo
+import servo.config as config
 class ConfBuilder(object):
     def __init__(self, source):
         ## read the file contents
@@ -156,6 +157,14 @@ class ConfBuilderHaproxy(ConfBuilder):
                 self.__content_map[section_name].append('# %s'%comment)
             self.__content_map[section_name].append('mode %s' % protocol)
             self.__content_map[section_name].append('bind 0.0.0.0:%s' % port)
+
+            if config.ENABLE_CLOUD_WATCH:  # this may have significant performance impact
+                self.__content_map[section_name].append('log %s local2 info' % config.CW_LISTENER_DOM_SOCKET)
+                if protocol == 'http':
+                    self.__content_map[section_name].append('log-format httplog\ %f\ %b\ %s\ %ST\ %ts\ %Tq\ %Tw\ %Tc\ %Tr\ %Tt') 
+                elif protocol == 'tcp':
+                    self.__content_map[section_name].append('log-format tcplog\ %f\ %b\ %s\ %ts\ %Tw\ %Tc\ %Tt') 
+
             def_backend = 'backend-%s-%s' % (protocol, port)
             self.__content_map[section_name].append('default_backend %s' % def_backend)
             # create the empty backend section

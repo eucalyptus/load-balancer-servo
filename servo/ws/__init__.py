@@ -2,6 +2,7 @@ import boto
 from boto.ec2.elb import ELBConnection
 from boto.ec2.regioninfo import RegionInfo
 from boto.ec2.elb.loadbalancer import LoadBalancer
+from boto.ec2.cloudwatch import CloudWatchConnection
 
 def connect_elb(host_name=None, port=8773, cluster=None, path="services/LoadBalancing", aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
     region=RegionInfo(name=cluster, endpoint=host_name)
@@ -47,7 +48,13 @@ class EucaELBConnection(ELBConnection):
             region = RegionInfo(self, self.DefaultRegionName,
                                 self.DefaultRegionEndpoint)
         self.region = region
-
+        self.cw_con = CloudWatchConnection(aws_access_key_id,
+                                    aws_secret_access_key,
+                                    is_secure, port, proxy, proxy_port,
+                                    proxy_user, proxy_pass, debug,
+                                    https_connection_factory, region, path,
+                                    security_token,
+                                    validate_certs=validate_certs)
         ELBConnection.__init__(self, aws_access_key_id,
                                     aws_secret_access_key,
                                     is_secure, port, proxy, proxy_port,
@@ -56,7 +63,17 @@ class EucaELBConnection(ELBConnection):
                                     security_token,
                                     validate_certs=validate_certs)
 
-    def put_servo_states(self, servo_instance_id, instances):
+    def put_cw_metric(self, servo_instance_id, metric):
+        params = {'InstanceId':servo_instance_id}
+        namespace = 'Servo'
+        name = ['Latency','RequestCount','HTTPCode_ELB_4XX','HTTPCode_ELB_5XX','HTTPCode_Backend_2XX','HTTPCode_Backend_3XX','HTTPCode_Backend_4XX','HTTPCode_Backend_5XX']
+        value = [metric.Latency, metric.RequestCount, metric.HTTPCode_ELB_4XX, metric.HTTPCode_ELB_5XX, metric.HTTPCode_Backend_2XX, metric.HTTPCode_Backend_3XX, metric.HTTPCode_Backend_4XX, metric.HTTPCode_Backend_5XX]
+        unit = ['Milliseconds','Count','Count','Count','Count','Count','Count','Count']
+        self.cw_con.build_put_params(params, name, value=value,timestamp=None, unit=unit, dimensions=None, statistics=None)
+
+        return self.get_status('PutServoStates', params)
+
+    def put_instance_health(self, servo_instance_id, instances):
         """
         Test the internal loadbalancer vms
         """

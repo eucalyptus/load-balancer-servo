@@ -150,7 +150,7 @@ class InstanceHealthChecker(threading.Thread):
                     instance = StatefulInstance(self.instance_id, 'InService')
                     servo.log.info('%s became InService' % self.instance_id)
                     try:
-                        con.put_servo_states(servo_instance_id, [instance])
+                        con.put_instance_health(servo_instance_id, [instance])
                     except Exception, err:
                         servo.log.error('failed to post servo states: %s' % err)
             else:
@@ -162,7 +162,7 @@ class InstanceHealthChecker(threading.Thread):
                     instance = StatefulInstance(self.instance_id, 'OutOfService')
                     servo.log.info('%s became OutOfService' % self.instance_id)
                     try:
-                        con.put_servo_states(servo_instance_id, [instance])
+                        con.put_instance_health(servo_instance_id, [instance])
                     except Exception, err:
                         servo.log.error('failed to post servo states: %s' % err)
 

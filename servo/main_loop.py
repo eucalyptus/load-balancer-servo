@@ -25,6 +25,8 @@ from servo.haproxy.listener import Listener
 import servo.hostname_cache
 import servo.health_check as health_check
 from servo.health_check import HealthCheckConfig, HealthCheckManager
+import servo.mon.listener as mon
+from servo.mon.stat import stat_instance
 
 from collections import Iterable
 
@@ -44,6 +46,9 @@ class ServoLoop(object):
         servo.log.debug('main loop running with elb_host=%s, instance_id=%s' % (self.__elb_host, self.__instance_id))
 
     def start(self):
+        if config.ENABLE_CLOUD_WATCH:
+            hl = mon.LogListener(stat_instance)
+            hl.start()
         # (future) retrieve IAM role credentials
         access_key_id = config.get_access_key_id()
         secret_access_key = config.get_secret_access_key()
