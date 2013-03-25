@@ -39,7 +39,7 @@ setup (name="Eucalyptus Loadbalancer Servo",
     author_email = "community@eucalyptus.com",
     license = "GPL v3",
     url = "http://www.eucalytpus.com",
-    packages = ['servo', 'servo/haproxy', 'servo/ws'],
+    packages = ['servo', 'servo/haproxy', 'servo/ws', 'servo/mon'],
     scripts = ['load-balancer-servo'],
     data_files = [('/etc/load-balancer-servo/', ['scripts/haproxy_template.conf'])],
 )
