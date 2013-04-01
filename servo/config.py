@@ -86,7 +86,7 @@ def get_ec2_path():
 
 __availability_zone = None
 def get_availability_zone():
-    global _availability_zone
+    global __availability_zone
     if __availability_zone is None:
         resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/placement/availability-zone")
         if resp['status'] != '200' or len(content) <= 0:
