@@ -35,7 +35,7 @@ class CWLoop(threading.Thread):
         aws_access_key_id = config.get_access_key_id()
         aws_secret_access_key = config.get_secret_access_key()
         servo_instance_id = config.get_servo_id()
-        if elb_host is None or aws_access_key_id is None or aws_secret_access_key is None or servo_instance_id is None:
+        if elb_host is None or servo_instance_id is None:
             servo.log.error('some required parameters are missing; failed to start cloudwatch report loop')
             return
 

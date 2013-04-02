@@ -44,13 +44,13 @@ class LogListener(threading.Thread):
         self.socket = sock
 
         while self.running:
-            data, client_address = sock.recvfrom(1024)
             try:
+                data, client_address = sock.recvfrom(1024)
                 log = self.parse(data)
                 if log is not None:
                     self.stat.received(log)
             except Exception, err:
-                servo.log.warn('parsing failed: %s' % err)
+                ;
 
     def parse(self, line):
         endmarker= line.rfind(':')
