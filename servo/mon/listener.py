@@ -50,7 +50,7 @@ class LogListener(threading.Thread):
                 if log is not None:
                     self.stat.received(log)
             except Exception, err:
-                ;
+                pass
 
     def parse(self, line):
         endmarker= line.rfind(':')
