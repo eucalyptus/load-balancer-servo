@@ -66,10 +66,10 @@ def get_value(key):
         return user_data_store[key]
 
 def get_access_key_id(): # After IAM roles, this will change
-    return None
+    return get_value('access_key')
 
 def get_secret_access_key():
-    return None
+    return get_value('secret_key')
 
 def get_clc_host():
     return get_value('eucalyptus_host')
