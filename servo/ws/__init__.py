@@ -3,6 +3,8 @@ from boto.ec2.elb import ELBConnection
 from boto.ec2.regioninfo import RegionInfo
 from boto.ec2.elb.loadbalancer import LoadBalancer
 from boto.ec2.cloudwatch import CloudWatchConnection
+import servo.hostname_cache as hostname_cache
+from collections import Iterable
 
 def connect_elb(host_name=None, port=8773, cluster=None, path="services/LoadBalancing", aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
     region=RegionInfo(name=cluster, endpoint=host_name)
@@ -83,8 +85,21 @@ class EucaELBConnection(ELBConnection):
         return self.get_status('PutServoStates', params)
 
     def get_servo_load_balancers(self, servo_instance_id):
-        marker = "servo:%s" % servo_instance_id
-        params = {"Marker": marker}
-
-        return self.get_list('DescribeLoadBalancers', params,
+        #marker = "servo:%s" % servo_instance_id
+        params = {"InstanceId": servo_instance_id}
+        lbs = self.get_list('DescribeLoadBalancersByServo', params,
                              [('member', LoadBalancer)])
+
+        for lb in lbs:
+            instances = []
+            if lb.instances is not None and isinstance(lb.instances, Iterable):
+                for inst in lb.instances:
+                    inst_id=str(inst.id) 
+                    if inst_id.find(':')>=0:
+                        token = inst_id.split(':')
+                        inst_id=token[0]
+                        ipaddr=token[1]
+                        hostname_cache.register(inst_id, ipaddr)
+                        inst.id = inst_id
+ 
+        return lbs

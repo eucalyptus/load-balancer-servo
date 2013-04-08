@@ -22,18 +22,13 @@ import config
 from boto.ec2.regioninfo import RegionInfo
 
 __hostname_map = {}
+
+def register(instance_id, ip_address):
+    if not instance_id in __hostname_map:
+        __hostname_map[instance_id] = ip_address
+
 def get_hostname(instance_id):
     if instance_id in __hostname_map:
         return  __hostname_map[instance_id]
     else:
-        region = RegionInfo(name=config.get_availability_zone(), endpoint=config.get_clc_host())
-        conn=boto.connect_ec2(region=region, aws_access_key_id=config.get_access_key_id(), aws_secret_access_key=config.get_secret_access_key(), port=config.get_clc_port(), path=config.get_ec2_path(), is_secure=False)
-        resvs = conn.get_all_instances(instance_ids=[instance_id])
-        if resvs is not None and len(resvs)>0:
-            for resv in resvs:
-                for instance in resv.instances:
-                    if instance.id == instance_id:
-                        __hostname_map[instance_id] = str(instance.private_ip_address)  #TODO: right to assume private ip is always available and reachable from lb vms? (security group?)
-                        return __hostname_map[instance_id]
-        
-
+        None
