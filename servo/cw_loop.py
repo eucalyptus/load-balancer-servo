@@ -34,6 +34,7 @@ class CWLoop(threading.Thread):
         elb_host = config.get_clc_host()
         aws_access_key_id = config.get_access_key_id()
         aws_secret_access_key = config.get_secret_access_key()
+        security_token = config.get_security_token()
         servo_instance_id = config.get_servo_id()
         if elb_host is None or servo_instance_id is None:
             servo.log.error('some required parameters are missing; failed to start cloudwatch report loop')
@@ -43,7 +44,7 @@ class CWLoop(threading.Thread):
         while time.time() - start_time < config.CWATCH_REPORT_PERIOD_SEC and self.running:
             time.sleep(1)
 
-        con = servo.ws.connect_elb(host_name=elb_host, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
+        con = servo.ws.connect_elb(host_name=elb_host, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
         while self.running:
             try:
                 metric = stat_instance.get_and_clear_stat()

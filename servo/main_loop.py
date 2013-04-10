@@ -49,11 +49,9 @@ class ServoLoop(object):
         if config.ENABLE_CLOUD_WATCH:
             hl = mon.LogListener(stat_instance)
             hl.start()
-        # (future) retrieve IAM role credentials
         access_key_id = config.get_access_key_id()
         secret_access_key = config.get_secret_access_key()
-        # (future) setup haproxy template  (retrieved from metadata service)
-        # periodically
+        security_token = config.get_security_token()
         self.__status = ServoLoop.RUNNING 
         proxy_mgr = ProxyManager()
         hc_mgr = HealthCheckManager()
@@ -61,7 +59,7 @@ class ServoLoop(object):
             # call elb-describe-services
             lbs = None
             try:
-                con = servo.ws.connect_elb(host_name=self.__elb_host, aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key)
+                con = servo.ws.connect_elb(host_name=self.__elb_host, aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key, security_token=security_token)
                 lbs = con.get_servo_load_balancers(self.__instance_id)
             except Exception, err:
                 servo.log.error('failed to query the elb service: %s' % err)

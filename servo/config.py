@@ -18,6 +18,7 @@
 import os
 import httplib2
 import servo
+import boto.provider
 
 DEFAULT_PID_ROOT = "/var/run/load-balancer-servo"
 DEFAULT_PIDFILE = os.path.join(DEFAULT_PID_ROOT, "servo.pid")
@@ -65,11 +66,19 @@ def get_value(key):
             raise Exception('could not find %s' % key) 
         return user_data_store[key]
 
-def get_access_key_id(): # After IAM roles, this will change
-    return None
+cred_provider = boto.provider.get_default()
+
+def get_access_key_id(): 
+    akey = cred_provider.get_access_key()
+    return akey
 
 def get_secret_access_key():
-    return None
+    skey = cred_provider.get_secret_key()
+    return skey
+
+def get_security_token():
+    token = cred_provider.get_security_token()
+    return token
 
 def get_clc_host():
     return get_value('eucalyptus_host')
