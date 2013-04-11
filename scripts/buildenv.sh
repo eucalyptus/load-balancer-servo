@@ -18,13 +18,15 @@
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
 
-JENKINS_URL=${JENKINS_URL:-http://jenkins.release.eucalyptus-systems.com}
+BUILD_NUMBER=${BUILD_NUMBER:-0}
 
-if [ ! -d ./rpmfab ]; then
-    git clone git://github.com/gholms/rpmfab.git
+if [ -z "$GIT_COMMIT" ]; then
+    GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
+else
+    GIT_COMMIT_SHORT=${GIT_COMMIT:0:7}
 fi
 
-rpmfab/build-arch.py \
-    -c $JENKINS_URL/userContent/mock/balancer-centos-6-x86_64.cfg -o results \
-    --mock-options "--uniqueext $BUILD_TAG" *.src.rpm
+BUILD_ID=$BUILD_NUMBER.$(date +%y%m%d)git${GIT_COMMIT_SHORT}
+
+BUILD_VERSION=$(cat VERSION)
 

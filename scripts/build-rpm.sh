@@ -18,30 +18,34 @@
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
 
-TARBALL_NAME=load-balancer-servo-1.0.0
-BUILD_NUMBER=${BUILD_NUMBER:-0}
+function insert_global()
+{
+    local spec=$1
+    local var=$2
+    local value=$3
 
-if [ -z "$GIT_COMMIT" ]; then
-    GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
-else
-    GIT_COMMIT_SHORT=${GIT_COMMIT:0:7}
-fi
+    sed -i "1s/^/# This is a generated value\n%global $var $value\n\n/" $spec
+}
 
-BUILD_ID=$BUILD_NUMBER.$(date +%y%m%d)git${GIT_COMMIT_SHORT}
+. scripts/buildenv.sh
 
 [ -d ./build ] && rm -rf build
 
-rm -f *.src.rpm
-
 mkdir -p build/{BUILD,BUILDROOT,SRPMS,RPMS,SOURCES,SPECS}
 
-cp *.spec build/SPECS
+TARBALL_NAME=load-balancer-servo-1.0.0
 
+cp *.spec build/SPECS
 git archive --format=tar --prefix=$TARBALL_NAME/ HEAD | gzip > build/SOURCES/$TARBALL_NAME.tar.gz
 
-rpmbuild --define "_topdir `pwd`/build" --define "dist .el6" \
-    --define "build_id $BUILD_ID" \
-    -bs build/SPECS/load-balancer-servo.spec
+SPECFILE=$(echo -n build/SPECS/*.spec)
 
-mv build/SRPMS/*.src.rpm .
+insert_global $SPECFILE dist .el6
+insert_global $SPECFILE build_id $BUILD_ID
+
+rpmbuild --define "_topdir `pwd`/build" \
+    -ba build/SPECS/load-balancer-servo.spec || exit 1
+
+mkdir -p results
+find build/ -name "*.rpm" -exec mv {} results/ \;
 
