@@ -44,8 +44,10 @@ insert_global $SPECFILE dist .el6
 insert_global $SPECFILE build_id $BUILD_ID
 
 rpmbuild --define "_topdir `pwd`/build" \
-    -ba build/SPECS/load-balancer-servo.spec || exit 1
+    -bs build/SPECS/load-balancer-servo.spec || exit 1
 
-mkdir -p results
-find build/ -name "*.rpm" -exec mv {} results/ \;
+[ ! -d ./rpmfab ] && git clone git://github.com/gholms/rpmfab.git
+
+./rpmfab/build-arch.py -c $JENKINS_URL/userContent/mock/centos-6-x86_64.cfg \
+    -o ./results build/SRPMS/*.src.rpm
 
