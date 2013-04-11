@@ -44,7 +44,7 @@ insert_global $SPECFILE dist .el6
 insert_global $SPECFILE build_id $BUILD_ID
 
 rpmbuild --define "_topdir `pwd`/build" \
-    -bs build/SPECS/load-balancer-servo.spec || exit 1
+    --nodeps -bs build/SPECS/load-balancer-servo.spec || exit 1
 
 [ ! -d ./rpmfab ] && git clone git://github.com/gholms/rpmfab.git
 
