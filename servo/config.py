@@ -30,7 +30,7 @@ SUDO_BIN = "/usr/bin/sudo"
 QUERY_PERIOD_SEC = 10
 CWATCH_REPORT_PERIOD_SEC = 10
 ENABLE_CLOUD_WATCH = True # affects the performance of haproxy
-CW_LISTENER_DOM_SOCKET ='/var/log/load-balancer-servo/haproxy.sock'
+CW_LISTENER_DOM_SOCKET ='/var/lib/load-balancer-servo/haproxy.sock'
 
 # Apply default values in case user does not specify
 pidfile = DEFAULT_PIDFILE
