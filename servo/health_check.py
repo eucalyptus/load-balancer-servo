@@ -112,11 +112,11 @@ class InstanceHealthChecker(threading.Thread):
     def __init__(self, instance_id):
         self.instance_id = instance_id
         self.running = True
-        self.health_status = 'OutOfService'
+        self.inst_status = 'OutOfService'
         threading.Thread.__init__(self)
 
     def health_status(self):
-        return self.health_status
+        return self.inst_status
 
     def run(self):
         self.ip_addr = hostname_cache.get_hostname(self.instance_id)
@@ -160,7 +160,7 @@ class InstanceHealthChecker(threading.Thread):
                     healthy = True
                     healthy_count = 0
                     instance = StatefulInstance(self.instance_id, 'InService')
-                    self.health_status = 'InService'
+                    self.inst_status = 'InService'
                     servo.log.info('%s became InService' % self.instance_id)
                     try:
                         con.put_instance_health(servo_instance_id, [instance])
@@ -173,7 +173,7 @@ class InstanceHealthChecker(threading.Thread):
                     healthy = False
                     unhealthy_count = 0
                     instance = StatefulInstance(self.instance_id, 'OutOfService')
-                    self.health_status = 'OutOfService'
+                    self.inst_status = 'OutOfService'
                     servo.log.info('%s became OutOfService' % self.instance_id)
                     try:
                         con.put_instance_health(servo_instance_id, [instance])
