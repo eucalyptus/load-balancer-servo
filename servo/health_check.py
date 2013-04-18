@@ -116,17 +116,18 @@ class InstanceHealthChecker(threading.Thread):
         if health_check_config is None:
             servo.log.error('health check config is not set')
             return
-        elb_host = config.get_clc_host()
-        aws_access_key_id = config.get_access_key_id()
-        aws_secret_access_key = config.get_secret_access_key()
-        security_token = config.get_security_token()
-        servo_instance_id = config.get_servo_id()
 
-        con = servo.ws.connect_elb(host_name=elb_host, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
+        elb_host = config.get_clc_host()
+        servo_instance_id = config.get_servo_id()
         healthy = None 
         healthy_count = 0
         unhealthy_count = 0
         while (self.running):
+            aws_access_key_id = config.get_access_key_id()
+            aws_secret_access_key = config.get_secret_access_key()
+            security_token = config.get_security_token()
+            con = servo.ws.connect_elb(host_name=elb_host, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
+
             target = health_check_config.target
             result = None
             if target.upper().startswith('HTTPS'):
