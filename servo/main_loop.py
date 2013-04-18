@@ -89,10 +89,14 @@ class ServoLoop(object):
                         if lb.instances is not None and isinstance(lb.instances, Iterable):
                             for inst in lb.instances:
                                 instances.append(str(inst.id))
-
                         if len(instances) > 0: 
                             hc_mgr.set_instances(instances)
  
+                        in_service_instances = []
+                        for inst_id in instances:                  
+                            if hc_mgr.health_status(inst_id) is 'InService':
+                                in_service_instances.append(inst_id)
+
                         if lb.listeners is not None and isinstance(lb.listeners, Iterable) :
                             for listener in lb.listeners:
                                 protocol=listener.protocol
@@ -101,7 +105,7 @@ class ServoLoop(object):
                                 instance_protocol=None # TODO: boto doesn't have the field
                                 ssl_cert=None # TODO: not supported
                                 l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name)
-                                for inst_id in instances:
+                                for inst_id in in_service_instances:
                                     hostname = servo.hostname_cache.get_hostname(inst_id)
                                     if hostname is not None: l.add_instance(hostname) 
                                 received.append(l)
