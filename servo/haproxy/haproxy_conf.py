@@ -156,6 +156,8 @@ class ConfBuilderHaproxy(ConfBuilder):
             if comment is not None:
                 self.__content_map[section_name].append('# %s'%comment)
             self.__content_map[section_name].append('mode %s' % protocol)
+            if protocol == 'http':
+                self.__content_map[section_name].append('option forwardfor except 127.0.0.1')
             self.__content_map[section_name].append('bind 0.0.0.0:%s' % port)
 
             if config.ENABLE_CLOUD_WATCH:  # this may have significant performance impact
