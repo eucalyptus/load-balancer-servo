@@ -37,7 +37,7 @@ def daemonize(func=None):
         sys.exit(1)
 
     # Close open file descriptors
-    for fd  in (0, 1, 2):
+    for fd in (0, 1, 2):
         try:
             os.close(fd)
         except OSError:
@@ -89,13 +89,20 @@ def usage():
 if __name__ == "__main__":
     daemon = False
     try:
-        opts, _ = getopt.getopt(sys.argv[1:],
-            "hdp:", ["--help", "--daemonize", "--pidfile"])
+        longopts = [
+            "--help",
+            "--daemonize",
+            "--pidfile",
+            "--log-level",
+        ]
+        opts, _ = getopt.getopt(sys.argv[1:], "hdp:l:", longopts)
         for arg, value in opts:
             if arg == "-d" or arg == "--daemonize":
                 daemon = True
             elif arg == "-p" or arg == "--pidfile":
-                config.set_pidfile(value)
+                servo.set_pidfile(value)
+            elif arg == "-l" or arg == "--log-level":
+                servo.set_loglevel(value)
             elif arg == "-h" or arg == "--help":
                 usage()
     except getopt.GetoptError:
@@ -110,4 +117,3 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             servo.log.info("Interrupted By User")
             sys.exit(0)
-

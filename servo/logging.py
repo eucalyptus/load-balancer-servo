@@ -15,18 +15,32 @@
 # Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
-from servo.config import set_pidfile
-from servo.logging import log, set_loglevel
-from servo.main_loop import ServoLoop
-from servo.cw_loop import CWLoop
 
-__version__ = '1.0.0-dev'
-Version = __version__
+import string
+import logging
+import logging.config
 
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
+from servo.config import LOG_FILE
 
-def start_servo():
-    CWLoop().start()
-    ServoLoop().start()
+_format_string = "%(asctime)s %(name)s [%(levelname)s]:%(message)s"
+logging.basicConfig(filename=LOG_FILE, level=logging.WARN, format=format_string)
+log = logging.getLogger('servo')
+_console = logging.StreamHandler()
+log.addHandler(_console)
+
+# Log level will default to WARN
+# If you want more information (like DEBUG) you will have to set the log level
+def set_loglevel(lvl):
+    global log
+    lvl_num = None
+    if isinstance(lvl, str):
+        try:
+            lvl_num = logging.__getattribute__(string.upper(lvl))
+        except AttributeError:
+            log.warn("Failed to set log level to '%s'" % lvl)
+            return
+    else:
+        lvl_num = lvl
+
+    log.setLevel(lvl_num)
+
