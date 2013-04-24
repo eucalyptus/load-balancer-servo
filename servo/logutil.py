@@ -18,16 +18,19 @@
 
 import string
 import logging
+from logging.handlers import RotatingFileHandler
 
 from servo.config import LOG_FILE
 
 
+LOG_BYTES = 1024 * 1024 # 1MB
 LOG_FORMAT = "%(asctime)s %(name)s [%(levelname)s]:%(message)s"
-LOG_HANDLER = logging.StreamHandler()
+LOG_HANDLER = RotatingFileHandler(LOG_FILE, maxBytes=LOG_BYTES, backupCount=5)
 
 
-logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
 log = logging.getLogger('servo')
+logging.basicConfig(filename=LOG_FILE, format=LOG_FORMAT)
+log.setLevel(logging.INFO)
 log.addHandler(LOG_HANDLER)
 
 
@@ -46,8 +49,3 @@ def set_loglevel(lvl):
         lvl_num = lvl
 
     log.setLevel(lvl_num)
-
-
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
