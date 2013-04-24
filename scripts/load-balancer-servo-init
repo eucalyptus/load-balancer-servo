@@ -34,12 +34,13 @@ SERVICE=load-balancer-servo
 PROCESS=/usr/bin/load-balancer-servo
 PIDFILE=/var/run/load-balancer-servo/servo.pid
 SERVOUSER=servo
+LOGLEVEL=info
 
 LOCKFILE=/var/lock/subsys/load-balancer-servo
 
 start() {
     echo -n $"Starting $SERVICE: "
-    daemon --user=$SERVOUSER --pidfile=$PIDFILE $PROCESS -d -p $PIDFILE
+    daemon --user=$SERVOUSER --pidfile=$PIDFILE $PROCESS -d -p $PIDFILE -l $LOGLEVEL
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch $LOCKFILE

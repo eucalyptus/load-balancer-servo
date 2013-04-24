@@ -16,16 +16,12 @@
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
 from servo.config import set_pidfile
-from servo.logging import log, set_loglevel
+from servo.logutil import log, set_loglevel
 from servo.main_loop import ServoLoop
 from servo.cw_loop import CWLoop
 
 __version__ = '1.0.0-dev'
 Version = __version__
-
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
 
 def start_servo():
     CWLoop().start()

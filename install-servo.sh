@@ -30,6 +30,7 @@ install -v -m 0440 scripts/servo-sudoers.conf /etc/sudoers.d/servo
 
 # Setup needed for servo service
 install -v -m 755 scripts/load-balancer-servo-init /etc/init.d/load-balancer-servo
+sed -i 's/LOGLEVEL=warn/LOGLEVEL=debug/' /etc/init.d/load-balancer-servo
 # Use set gid for servo owned directories
 install -v -m 6700 -o servo -g servo -d /var/{run,lib,log}/load-balancer-servo
 chown servo:servo -R /etc/load-balancer-servo
