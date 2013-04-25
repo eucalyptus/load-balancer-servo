@@ -89,8 +89,8 @@ class ServoLoop(object):
                         if lb.instances is not None and isinstance(lb.instances, Iterable):
                             for inst in lb.instances:
                                 instances.append(str(inst.id))
-                        if len(instances) > 0: 
-                            hc_mgr.set_instances(instances)
+                        
+                        hc_mgr.set_instances(instances)
                         in_service_instances = []
                         for inst_id in instances:                  
                             if hc_mgr.health_status(inst_id) is 'InService':
