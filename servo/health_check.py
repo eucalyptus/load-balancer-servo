@@ -156,12 +156,12 @@ class InstanceHealthChecker(threading.Thread):
             elif result:
                 healthy_count += 1
                 unhealthy_count = 0
-                if (healthy is None or not healthy) and healthy_count >= health_check_config.healthy_threshold:
+                if healthy_count >= health_check_config.healthy_threshold:
                     healthy = True
                     healthy_count = 0
                     instance = StatefulInstance(self.instance_id, 'InService')
                     self.inst_status = 'InService'
-                    servo.log.info('%s became InService' % self.instance_id)
+                    servo.log.debug('Reported %s InService' % self.instance_id)
                     try:
                         con.put_instance_health(servo_instance_id, [instance])
                     except Exception, err:
@@ -169,12 +169,12 @@ class InstanceHealthChecker(threading.Thread):
             else:
                 unhealthy_count += 1
                 healthy_count = 0
-                if (healthy is None or healthy) and unhealthy_count >= health_check_config.unhealthy_threshold:
+                if unhealthy_count >= health_check_config.unhealthy_threshold:
                     healthy = False
                     unhealthy_count = 0
                     instance = StatefulInstance(self.instance_id, 'OutOfService')
                     self.inst_status = 'OutOfService'
-                    servo.log.info('%s became OutOfService' % self.instance_id)
+                    servo.log.debug('Reported %s OutOfService' % self.instance_id)
                     try:
                         con.put_instance_health(servo_instance_id, [instance])
                     except Exception, err:
