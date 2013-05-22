@@ -85,6 +85,7 @@ fi
 %dir %{_var}/log/load-balancer-servo
 %dir %{_var}/lib/load-balancer-servo
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/haproxy_template.conf
+%config(noreplace) %{_sysconfdir}/load-balancer-servo/boto.cfg
 
 %changelog
 * Thu Mar 07 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 0-0.8
