@@ -18,13 +18,13 @@
 import os
 import httplib2
 import servo
+import boto
 import boto.provider
 
 DEFAULT_PID_ROOT = "/var/run/load-balancer-servo"
 DEFAULT_PIDFILE = os.path.join(DEFAULT_PID_ROOT, "servo.pid")
 CONF_ROOT = "/etc/load-balancer-servo"
 RUN_ROOT = "/var/lib/load-balancer-servo"
-LOG_FILE = "/var/log/load-balancer-servo/servo.log"
 HAPROXY_BIN = "/usr/sbin/haproxy"
 SUDO_BIN = "/usr/bin/sudo"
 QUERY_PERIOD_SEC = 10
@@ -35,6 +35,24 @@ CW_LISTENER_DOM_SOCKET ='/var/lib/load-balancer-servo/haproxy.sock'
 # Apply default values in case user does not specify
 pidfile = DEFAULT_PIDFILE
 pidroot = DEFAULT_PID_ROOT
+boto_config = None
+cred_provider = None
+
+
+def get_provider():
+    global boto_config
+    global cred_provider
+    if not cred_provider:
+        if boto_config:
+            boto.provider.config = boto.Config(boto_config)
+        cred_provider = boto.provider.get_default()
+    return cred_provider
+
+def set_boto_config(filename):
+    if not os.path.isfile(filename):
+        raise Exception('could not find boto config {0}'.format(filename))
+    global boto_config
+    boto_config = filename
 
 # Update pidfile and pidroot variables in global scope.
 # This is called if the user has chosen to use a custom
@@ -66,18 +84,16 @@ def get_value(key):
             raise Exception('could not find %s' % key) 
         return user_data_store[key]
 
-cred_provider = boto.provider.get_default()
-
 def get_access_key_id(): 
-    akey = cred_provider.get_access_key()
+    akey = get_provider().get_access_key()
     return akey
 
 def get_secret_access_key():
-    skey = cred_provider.get_secret_key()
+    skey = get_provider().get_secret_key()
     return skey
 
 def get_security_token():
-    token = cred_provider.get_security_token()
+    token = get_provider().get_security_token()
     return token
 
 def get_clc_host():

@@ -16,22 +16,26 @@
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
 
-import string
 import logging
 from logging.handlers import RotatingFileHandler
 
-from servo.config import LOG_FILE
-
-
+#
+# We can't specify the log file in the config module since that will
+# import boto and keep us from initializing the boto logger.
+#
+LOG_FILE = '/var/log/load-balancer-servo/servo.log'
 LOG_BYTES = 1024 * 1024 # 1MB
 LOG_FORMAT = "%(asctime)s %(name)s [%(levelname)s]:%(message)s"
 LOG_HANDLER = RotatingFileHandler(LOG_FILE, maxBytes=LOG_BYTES, backupCount=5)
 
 
-log = logging.getLogger('servo')
 logging.basicConfig(filename=LOG_FILE, format=LOG_FORMAT)
+log = logging.getLogger('servo')
+botolog = logging.getLogger('boto')
 log.setLevel(logging.INFO)
+botolog.setLevel(logging.INFO)
 log.addHandler(LOG_HANDLER)
+botolog.addHandler(LOG_HANDLER)
 
 
 # Log level will default to WARN
@@ -41,7 +45,7 @@ def set_loglevel(lvl):
     lvl_num = None
     if isinstance(lvl, str):
         try:
-            lvl_num = logging.__getattribute__(string.upper(lvl))
+            lvl_num = logging.__getattribute__(lvl.upper())
         except AttributeError:
             log.warn("Failed to set log level to '%s'" % lvl)
             return
@@ -49,3 +53,4 @@ def set_loglevel(lvl):
         lvl_num = lvl
 
     log.setLevel(lvl_num)
+    botolog.setLevel(lvl_num)

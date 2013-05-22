@@ -15,8 +15,13 @@
 # Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
-from servo.config import set_pidfile
+
+#
+# Order matters here. We want to make sure we initialize logging before anything
+# else happens. We need to initialize the logger that boto will be using.
+#
 from servo.logutil import log, set_loglevel
+from servo.config import set_pidfile, set_boto_config
 from servo.main_loop import ServoLoop
 from servo.cw_loop import CWLoop
 
