@@ -97,7 +97,7 @@ def get_security_token():
     return token
 
 def get_clc_host():
-    return get_value('eucalyptus_host')
+    return '169.254.169.254'
 
 def get_clc_port():
     val=get_value('eucalyptus_port')
