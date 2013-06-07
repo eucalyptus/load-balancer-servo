@@ -8,7 +8,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 
 Name:           load-balancer-servo
-Version:        %{build_num}
+Version:        %{build_version}
 Release:        0%{?build_id:.%build_id}%{?dist}
 Summary:        Configuration tool for the Eucalyptus LB
 

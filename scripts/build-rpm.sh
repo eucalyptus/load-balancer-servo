@@ -42,7 +42,7 @@ SPECFILE=$(echo -n build/SPECS/*.spec)
 
 insert_global $SPECFILE dist .el6
 insert_global $SPECFILE build_id $BUILD_ID
-insert_global $SPECFILE build_num $BUILD_NUMBER
+insert_global $SPECFILE build_version $BUILD_VERSION
 
 rpmbuild --define "_topdir `pwd`/build" \
     --nodeps -bs build/SPECS/load-balancer-servo.spec || exit 1
