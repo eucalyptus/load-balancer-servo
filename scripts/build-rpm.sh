@@ -33,7 +33,7 @@ function insert_global()
 
 mkdir -p build/{BUILD,BUILDROOT,SRPMS,RPMS,SOURCES,SPECS}
 
-TARBALL_NAME=load-balancer-servo-1.0.0
+TARBALL_NAME=load-balancer-servo-$BUILD_VERSION
 
 cp *.spec build/SPECS
 git archive --format=tar --prefix=$TARBALL_NAME/ HEAD | gzip > build/SOURCES/$TARBALL_NAME.tar.gz
@@ -42,6 +42,7 @@ SPECFILE=$(echo -n build/SPECS/*.spec)
 
 insert_global $SPECFILE dist .el6
 insert_global $SPECFILE build_id $BUILD_ID
+insert_global $SPECFILE build_num $BUILD_NUMBER
 
 rpmbuild --define "_topdir `pwd`/build" \
     --nodeps -bs build/SPECS/load-balancer-servo.spec || exit 1

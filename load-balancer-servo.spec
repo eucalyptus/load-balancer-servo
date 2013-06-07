@@ -8,14 +8,14 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 
 Name:           load-balancer-servo
-Version:        1.0.0
+Version:        %{build_num}
 Release:        0%{?build_id:.%build_id}%{?dist}
 Summary:        Configuration tool for the Eucalyptus LB
 
 Group:          Applications/System
 License:        GPLv3 
 URL:            http://www.eucalyptus.com
-Source0:        %{name}-%{version}%{?tar_suffix}.tar.gz
+Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
@@ -90,4 +90,3 @@ fi
 %changelog
 * Thu Mar 07 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 0-0.8
 - Initial build
-

@@ -26,7 +26,11 @@ else
     GIT_COMMIT_SHORT=${GIT_COMMIT:0:7}
 fi
 
-BUILD_ID=$BUILD_NUMBER.$(date +%y%m%d)git${GIT_COMMIT_SHORT}
+if [ "x$BUILD_RELEASE" = "xtrue" ]; then
+    BUILD_ID=$BUILD_NUMBER
+else
+    BUILD_ID=$BUILD_NUMBER.$(date +%y%m%d)git${GIT_COMMIT_SHORT}
+fi
 
 BUILD_VERSION=$(cat VERSION)
 
