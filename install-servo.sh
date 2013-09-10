@@ -36,3 +36,6 @@ install -v -m 6700 -o servo -g servo -d /var/{run,lib,log}/load-balancer-servo
 chown servo:servo -R /etc/load-balancer-servo
 chmod 700 /etc/load-balancer-servo
 
+# NTP cronjob
+install -p -m 755 -D scripts/servo-ntp-update /usr/libexec/load-balancer-servo/servo-ntp-update
+install -p -m 0750 -D scripts/load-balancer-servo.cron /etc/cron.d/load-balancer-servo

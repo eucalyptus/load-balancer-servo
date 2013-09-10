@@ -1,10 +1,3 @@
-%if 0%{?el5}
-%global pybasever 2.6
-%global __python_ver 26
-%global __python /usr/bin/python%{pybasever}
-%global __os_install_post %{__multiple_python_os_install_post}
-%endif
-
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 
 Name:           load-balancer-servo
@@ -28,6 +21,7 @@ Requires:       python%{?__python_ver}-boto
 Requires:       python%{?__python_ver}-httplib2
 Requires:       haproxy >= 1.5
 Requires:       sudo
+Requires:       crontabs
 Requires(pre):  %{_sbindir}/useradd
 
 %description
@@ -46,24 +40,24 @@ rm -rf $RPM_BUILD_ROOT
 # Install CLI tools
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 
-mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sudoers.d/
-
 #
 # There is no extension on the installed sudoers file for a reason
 # It will only be read by sudo if there is *no* extension
 #
-install -m 0440 scripts/servo-sudoers.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sudoers.d/servo
-
-mkdir -p $RPM_BUILD_ROOT/%{_initddir}
-install -m 755 scripts/load-balancer-servo-init $RPM_BUILD_ROOT/%{_initddir}/load-balancer-servo
+install -p -m 0440 -D scripts/servo-sudoers.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sudoers.d/servo
+install -p -m 755 -D scripts/load-balancer-servo-init $RPM_BUILD_ROOT/%{_initddir}/load-balancer-servo
+install -p -m 755 -D scripts/servo-ntp-update $RPM_BUILD_ROOT%{_libexecdir}/%{name}/ntp-update
 install -m 6700 -d $RPM_BUILD_ROOT/%{_var}/{run,lib,log}/load-balancer-servo
+
+install -p -m 0750 -D %{name}.cron $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/%{name}
+chmod 0640 $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/%{name}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %pre
 getent passwd servo >/dev/null || \
-    useradd -d /var/lib/load-balancer-servo \
+    useradd -d %{_var}/lib/load-balancer-servo \
     -M -s /sbin/nologin servo
 
 # Stop running services for upgrade
@@ -73,11 +67,13 @@ fi
 
 %files
 %defattr(-,root,root,-)
+%doc README.md LICENSE
 %{python_sitelib}/*
 %{_bindir}/load-balancer-servo
 %{_sysconfdir}/sudoers.d/servo
 %{_initddir}/load-balancer-servo
-%doc README.md LICENSE
+%{_libexecdir}/%{name}
+%config(noreplace) %{_sysconfdir}/cron.d/%{name}
 
 %defattr(-,servo,servo,-)
 %dir %{_sysconfdir}/load-balancer-servo
@@ -88,5 +84,9 @@ fi
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/boto.cfg
 
 %changelog
-* Thu Mar 07 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 0-0.8
+* Mon Sep 09 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.1-0
+- Add ntp update script and cron job
+- Spec file cleanup
+
+* Thu Mar 07 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.0-0
 - Initial build
