@@ -119,10 +119,6 @@ class InstanceHealthChecker(threading.Thread):
         return self.inst_status
 
     def run(self):
-        self.ip_addr = hostname_cache.get_hostname(self.instance_id)
-        if self.ip_addr is None:
-            servo.log.error('could not find the ipaddress of the instance %s' % self.instance_id)
-            return
         if health_check_config is None:
             servo.log.error('health check config is not set')
             return
@@ -133,6 +129,10 @@ class InstanceHealthChecker(threading.Thread):
         healthy_count = 0
         unhealthy_count = 0
         while (self.running):
+            self.ip_addr = hostname_cache.get_hostname(self.instance_id)
+            if self.ip_addr is None:
+                servo.log.error('could not find the ipaddress of the instance %s' % self.instance_id)
+                return
             aws_access_key_id = config.get_access_key_id()
             aws_secret_access_key = config.get_secret_access_key()
             security_token = config.get_security_token()

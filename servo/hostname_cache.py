@@ -24,8 +24,7 @@ from boto.ec2.regioninfo import RegionInfo
 __hostname_map = {}
 
 def register(instance_id, ip_address):
-    if not instance_id in __hostname_map:
-        __hostname_map[instance_id] = ip_address
+    __hostname_map[instance_id] = ip_address
 
 def get_hostname(instance_id):
     if instance_id in __hostname_map:
