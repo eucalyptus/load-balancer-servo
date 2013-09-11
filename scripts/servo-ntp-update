@@ -56,7 +56,7 @@ ntp_server = userdata.get('ntp_server', None)
 backup_orig()
 
 if ntp_server:
-    syslog.syslog("Found NTP server in userdata: {0}".format(ntp_server))
+    syslog.syslog("Found NTP server(s) in userdata: {0}".format(ntp_server))
     tmpfile = tempfile.NamedTemporaryFile(prefix='ntp-update')
     with open('/etc/ntp.conf.orig', 'r') as ntpfile:
         for line in ntpfile.readlines():
@@ -64,7 +64,8 @@ if ntp_server:
                 tmpfile.write('# {0}'.format(line))
             else:
                 tmpfile.write(line)
-    tmpfile.write("server {0}\n".format(ntp_server))
+    for server in ntp_server.split(','):
+        tmpfile.write("server {0}\n".format(server))
     tmpfile.flush()
     if not filecmp.cmp('/etc/ntp.conf', tmpfile.name):
         syslog.syslog("Updating NTP configuration")
@@ -74,7 +75,7 @@ if ntp_server:
             shutil.copyfile(tmpfile.name, '/etc/ntp.conf')
             os.chmod('/etc/ntp.conf', 0644)
             os.chown('/etc/ntp.conf', 0, 0)
-            subprocess.check_call(['/usr/sbin/ntpdate', ntp_server])
+            subprocess.check_call(['/usr/sbin/ntpdate', ntp_server.split(',')[0]])
             subprocess.check_call(['/sbin/service', 'ntpd', 'start'])
         except subprocess.CalledProcessError as ex:
             syslog.syslog("Command failed with status: {0}".format(ex.returncode))
