@@ -64,7 +64,8 @@ if ntp_server:
                 tmpfile.write('# {0}'.format(line))
             else:
                 tmpfile.write(line)
-    tmpfile.write("server {0}\n".format(ntp_server))
+    for server in ntp_server.split(','):
+        tmpfile.write("server {0}\n".format(server))
     tmpfile.flush()
     if not filecmp.cmp('/etc/ntp.conf', tmpfile.name):
         syslog.syslog("Updating NTP configuration")
