@@ -41,6 +41,7 @@ def backup_orig():
         syslog.syslog("Writing original config to /etc/ntp.conf.orig")
         shutil.copyfile('/etc/ntp.conf', '/etc/ntp.conf.orig')
 
+syslog.openlog(sys.argv[0])
 syslog.syslog("Starting NTP server check")
 
 try:
