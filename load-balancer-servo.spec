@@ -22,6 +22,8 @@ Requires:       python%{?__python_ver}-httplib2
 Requires:       haproxy >= 1.5
 Requires:       sudo
 Requires:       crontabs
+Requires:       ntp
+Requires:       ntpdate
 Requires(pre):  %{_sbindir}/useradd
 
 %description
@@ -84,6 +86,9 @@ fi
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/boto.cfg
 
 %changelog
+* Tue Sep 24 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.1-0
+- Add requires for ntp and ntpdate
+
 * Mon Sep 09 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.1-0
 - Add ntp update script and cron job
 - Spec file cleanup

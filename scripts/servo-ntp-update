@@ -41,6 +41,7 @@ def backup_orig():
         syslog.syslog("Writing original config to /etc/ntp.conf.orig")
         shutil.copyfile('/etc/ntp.conf', '/etc/ntp.conf.orig')
 
+syslog.openlog(sys.argv[0])
 syslog.syslog("Starting NTP server check")
 
 try:
@@ -68,17 +69,26 @@ if ntp_server:
         tmpfile.write("server {0}\n".format(server))
     tmpfile.flush()
     if not filecmp.cmp('/etc/ntp.conf', tmpfile.name):
-        syslog.syslog("Updating NTP configuration")
+        syslog.syslog("Stopping ntpd")
         try:
             subprocess.check_call(['/sbin/service', 'ntpd', 'stop'])
-            shutil.move('/etc/ntp.conf', '/etc/ntp.conf.bak')
-            shutil.copyfile(tmpfile.name, '/etc/ntp.conf')
-            os.chmod('/etc/ntp.conf', 0644)
-            os.chown('/etc/ntp.conf', 0, 0)
-            subprocess.check_call(['/usr/sbin/ntpdate', ntp_server.split(',')[0]])
+        except subprocess.CalledProcessError as ex:
+            syslog.syslog("Failed to stop ntpd")
+        syslog.syslog("Updating NTP configuration")
+        shutil.move('/etc/ntp.conf', '/etc/ntp.conf.bak')
+        shutil.copyfile(tmpfile.name, '/etc/ntp.conf')
+        os.chmod('/etc/ntp.conf', 0644)
+        os.chown('/etc/ntp.conf', 0, 0)
+        first_ntp_server = ntp_server.split(',')[0]
+        try:
+            syslog.syslog("Running ntpdate against {0}".format(first_ntp_server))
+            subprocess.check_call(['/usr/sbin/ntpdate', first_ntp_server])
+        except subprocess.CalledProcessError as ex:
+            syslog.syslog("Running ntpdate failed, unable to contact server")
+        try:
+            syslog.syslog("Starting ntpd")
             subprocess.check_call(['/sbin/service', 'ntpd', 'start'])
         except subprocess.CalledProcessError as ex:
-            syslog.syslog("Command failed with status: {0}".format(ex.returncode))
-            sys.exit(1)
+            syslog.syslog("Failed to start ntpd")
 else:
     syslog.syslog("No NTP server specified")
