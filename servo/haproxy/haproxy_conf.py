@@ -170,7 +170,7 @@ class ConfBuilderHaproxy(ConfBuilder):
             def_backend = 'backend-%s-%s' % (protocol, port)
             self.__content_map[section_name].append('default_backend %s' % def_backend)
             # create the empty backend section
-            self.__content_map['backend %s' % def_backend] = ['balance roundrobin']
+            self.__content_map['backend %s' % def_backend] = ['mode %s\n  balance roundrobin' % protocol ]
         else:
             pass # do nothing
 
