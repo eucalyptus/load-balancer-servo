@@ -6,7 +6,7 @@ from boto.ec2.cloudwatch import CloudWatchConnection
 import servo.hostname_cache as hostname_cache
 from collections import Iterable
 
-def connect_elb(host_name=None, port=8773, cluster=None, path="services/LoadBalancing", aws_access_key_id=None, aws_secret_access_key=None, security_token = None, **kwargs):
+def connect_elb(host_name=None, port=80, cluster=None, path="services/LoadBalancing", aws_access_key_id=None, aws_secret_access_key=None, security_token = None, **kwargs):
     region=RegionInfo(name=cluster, endpoint=host_name)
     
     return EucaELBConnection(region=region, port=port, path=path, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token,  **kwargs)
