@@ -17,7 +17,7 @@
 # additional information or have any questions.
 
 class Listener(object):
-    def __init__(self, protocol, port, instance_port=None, instance_protocol=None, ssl_cert=None, loadbalancer=None):
+    def __init__(self, protocol, port, instance_port=None, instance_protocol=None, ssl_cert=None, loadbalancer=None, cookie_name=None, cookie_expiration=None):
         self.__loadbalancer = loadbalancer  #loadbalancer name for debugging
         if protocol is not None:
             protocol = protocol.lower()
@@ -31,7 +31,8 @@ class Listener(object):
             self.__instance_protocol = instance_protocol.lower()
         else:
             self.__instance_protocol = protocol
- 
+        self.__cookie_name = cookie_name  #if AppCookieStickiness is enabled
+        self.__cookie_expiration = cookie_expiration  #if LBCookieStickiness is enabled
         self.__ssl_cert = ssl_cert
         self.__instances = set() 
  
@@ -58,6 +59,12 @@ class Listener(object):
 
     def instances(self):
         return self.__instances
+
+    def app_cookie_name(self):
+        return self.__cookie_name
+
+    def lb_cookie_expiration(self):
+        return self.__cookie_expiration
   
     def loadbalancer(self):
         return self.__loadbalancer
@@ -74,7 +81,11 @@ class Listener(object):
         if self.__instance_protocol != other.__instance_protocol:
             return False
         if self.__ssl_cert != other.__ssl_cert:
-            return False       
+            return False
+        if self.__cookie_name != other.__cookie_name:
+            return False
+        if self.__cookie_expiration != other.__cookie_expiration:
+            return False
         if len(self.__instances.symmetric_difference(other.__instances)) > 0:
             return False
         return True

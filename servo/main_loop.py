@@ -103,7 +103,9 @@ class ServoLoop(object):
                                 instance_port=listener.instance_port
                                 instance_protocol=None # TODO: boto doesn't have the field
                                 ssl_cert=None # TODO: not supported
-                                l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name)
+                                cookie_expiration = ServoLoop.get_cookie_expiration(listener)
+                                cookie_name = ServoLoop.get_cookie_name(listener)
+                                l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name, cookie_name=cookie_name, cookie_expiration=cookie_expiration)
                                 for inst_id in in_service_instances:
                                     hostname = servo.hostname_cache.get_hostname(inst_id)
                                     if hostname is not None: l.add_instance(hostname) 
@@ -129,3 +131,19 @@ class ServoLoop(object):
 
     def status(self):
         return self.__status
+
+    @staticmethod
+    def get_cookie_expiration(listener):
+        expiration = None 
+        if listener.policy_names:
+            expiration = [policy.replace('LBCookieStickinessPolicyType:','') for policy in listener.policy_names if policy.find('LBCookieStickinessPolicyType:')>=0]  
+        if expiration:
+            return expiration[0]
+
+    @staticmethod
+    def get_cookie_name(listener):
+        cookie = None
+        if listener.policy_names:
+            cookie = [policy.replace('AppCookieStickinessPolicyType:','') for policy in listener.policy_names if policy.find('AppCookieStickinessPolicyType:')>=0]  
+        if cookie:
+            return cookie[0]

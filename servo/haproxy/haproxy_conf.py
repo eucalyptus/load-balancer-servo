@@ -17,6 +17,7 @@
 # additional information or have any questions.
 
 import os
+import base64
 import servo
 import servo.config as config
 class ConfBuilder(object):
@@ -33,16 +34,16 @@ class ConfBuilder(object):
     def build(self, destination=None):
         raise NotImplementedException
 
-    def add(self, protocol, port, instances=[], comment=None):
+    def add(self, protocol, port, instances=[], cookie_name=None, cookie_expire=None, comment=None):
         try:
-            self.add_protocol_port(protocol, port, comment )
+            self.add_protocol_port(protocol, port, cookie_name, cookie_expire, comment )
             for instance in instances:
                 self.add_backend(port, instance)
         except Exception, err:
             servo.log.error('failed to add protocol-port: %s' % err)
         return self
 
-    def add_protocol_port(self, protocol, port):
+    def add_protocol_port(self, protocol, port, cookie_name=None, cookie_expire=None, comment=None):
         raise NotImplementedError
   
     def remove_protocol_port(self, port):
@@ -137,7 +138,7 @@ class ConfBuilderHaproxy(ConfBuilder):
                     break
         return backend_name
 
-    def add_protocol_port(self, protocol='tcp', port=80, comment=None):
+    def add_protocol_port(self, protocol='tcp', port=80, cookie_name=None, cookie_expire=None, comment=None):
         '''
             add new protocol/port to the config file. if there's existing one, pass
         '''
@@ -169,8 +170,16 @@ class ConfBuilderHaproxy(ConfBuilder):
 
             def_backend = 'backend-%s-%s' % (protocol, port)
             self.__content_map[section_name].append('default_backend %s' % def_backend)
+            
+            backend_attribute = 'mode %s\n  balance roundrobin' % protocol 
+            if ( protocol == 'http' or protocol == 'https' ) and cookie_expire:
+                try:
+                    cookie_expire = int(cookie_expire)
+                    backend_attribute = '%s\n  cookie AWSELB insert indirect nocache maxidle %ds maxlife %ds' % (backend_attribute, cookie_expire, cookie_expire) 
+                except exceptions.ValueError:
+                    servo.log.error('failed to set cookie expiration: value is not a number type')
             # create the empty backend section
-            self.__content_map['backend %s' % def_backend] = ['mode %s\n  balance roundrobin' % protocol ]
+            self.__content_map['backend %s' % def_backend] = [backend_attribute]
         else:
             pass # do nothing
 
@@ -208,11 +217,21 @@ class ConfBuilderHaproxy(ConfBuilder):
 
         backend = 'backend %s' % backend_name 
         if backend not in self.__content_map.iterkeys():
-            self.__content_map[backend] = ['balance roundrobin']
+            raise 'no backend is found with name %s' % backend_name
+
         backend_conf = self.__content_map[backend]
+        lbcookie_enabled = False
+        if any("cookie AWSELB" in s for s in backend_conf):
+            lbcookie_enabled = True
         line = 'server %s %s:%d' % (section_name.replace('frontend','').strip(' '), instance['hostname'], instance['port'])
+        if lbcookie_enabled:
+            line = line + ' cookie %s' % ConfBuilderHaproxy.encode_str(instance['hostname'])
         backend_conf.insert(0, line)
         return self
+
+    @staticmethod
+    def encode_str(server):
+        return base64.b64encode(server) 
 
     def remove_backend(self, port, instance):
         section_name, section = self.find_frontend(port)
