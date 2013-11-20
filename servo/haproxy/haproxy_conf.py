@@ -172,12 +172,17 @@ class ConfBuilderHaproxy(ConfBuilder):
             self.__content_map[section_name].append('default_backend %s' % def_backend)
             
             backend_attribute = 'mode %s\n  balance roundrobin' % protocol 
+            if cookie_expire and cookie_name:
+                servo.log.error('both duration-based and app-controlled cookie stickiness are enabled. something is wrong!')
             if ( protocol == 'http' or protocol == 'https' ) and cookie_expire:
                 try:
                     cookie_expire = int(cookie_expire)
                     backend_attribute = '%s\n  cookie AWSELB insert indirect nocache maxidle %ds maxlife %ds' % (backend_attribute, cookie_expire, cookie_expire) 
                 except exceptions.ValueError:
                     servo.log.error('failed to set cookie expiration: value is not a number type')
+            elif ( protocol == 'http' or protocol == 'https' ) and cookie_name:
+                backend_attribute = '%s\n  appsession %s len %d timeout %dm' % (backend_attribute, cookie_name, config.appcookie_length(), config.appcookie_timeout())
+
             # create the empty backend section
             self.__content_map['backend %s' % def_backend] = [backend_attribute]
         else:
@@ -221,11 +226,16 @@ class ConfBuilderHaproxy(ConfBuilder):
 
         backend_conf = self.__content_map[backend]
         lbcookie_enabled = False
+        appcookie_enabled = False
         if any("cookie AWSELB" in s for s in backend_conf):
             lbcookie_enabled = True
+        elif any("appsession " in s for s in backend_conf):
+            appcookie_enabled = True
+
         line = 'server %s %s:%d' % (section_name.replace('frontend','').strip(' '), instance['hostname'], instance['port'])
-        if lbcookie_enabled:
+        if lbcookie_enabled or appcookie_enabled:
             line = line + ' cookie %s' % ConfBuilderHaproxy.encode_str(instance['hostname'])
+       
         backend_conf.insert(0, line)
         return self
 

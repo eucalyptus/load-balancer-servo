@@ -128,3 +128,12 @@ def get_servo_id():
             raise Exception('could not query the metadata for instance id (%s,%s)' % (resp, content))
         __servo_id = content
     return __servo_id
+
+def appcookie_length():
+    return 4096
+
+def appcookie_timeout():
+    try:
+        return 60*int(get_value('app-cookie-duration'))
+    except Exception, err:
+        return 60*24 #24 hours
