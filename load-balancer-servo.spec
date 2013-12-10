@@ -86,6 +86,9 @@ fi
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/boto.cfg
 
 %changelog
+* Tue Dec 10 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.2-0
+- Fix port for communication with CLC
+
 * Tue Sep 24 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.1-0
 - Add requires for ntp and ntpdate
 
