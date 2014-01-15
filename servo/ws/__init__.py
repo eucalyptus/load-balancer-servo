@@ -96,7 +96,7 @@ class EucaEuareConnection(IAMConnection):
         server_pk = result['euca:server_pk'] 
    
         if arn != cert_arn:
-            raise "certificate ARN in the response is not valid"
+            raise Exception("certificate ARN in the response is not valid")
 
         # verify the signature to ensure the response came from EUARE
         cert = M2Crypto.X509.load_cert_string(euare_cert)
