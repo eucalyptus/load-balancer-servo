@@ -171,12 +171,13 @@ class ProxyCreate(ProxyAction):
                     os.makedirs(cert_dir)
 
                 cert_file = cert_dir+"/cert.pem"
-                f_cert = open(cert_file, 'w')
-                f_cert.write(cert.get_certificate())
-                f_cert.write(cert.get_private_key())
-                f_cert.close()
+                if not os.path.exists(cert_file):
+                    f_cert = open(cert_file, 'w')
+                    f_cert.write(cert.get_certificate())
+                    f_cert.write(cert.get_private_key())
+                    f_cert.close()
                 self.__listener.set_ssl_cert_path(cert_file)
-                servo.log.info('ssl certificate downloaded: %s' % arn)
+                servo.log.info('ssl certificate ready for use: %s' % arn)
             except Exception, err:
                 servo.log.error('failed to create the server certificate files: %s' % err)
         

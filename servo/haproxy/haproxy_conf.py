@@ -142,7 +142,7 @@ class ConfBuilderHaproxy(ConfBuilder):
         '''
             add new protocol/port to the config file. if there's existing one, pass
         '''
-        if not ( protocol == 'http' or protocol == 'tcp' or protocol == 'https'):
+        if not ( protocol == 'http' or protocol == 'tcp' or protocol == 'https' or protocol == 'ssl'):
             raise Exception('unknown protocol')
 
         # make sure no other frontend listen on the port
@@ -158,11 +158,13 @@ class ConfBuilderHaproxy(ConfBuilder):
                 self.__content_map[section_name].append('# %s'%comment)
             if protocol == 'https':
                 self.__content_map[section_name].append('mode http')
+            elif protocol == 'ssl':
+                self.__content_map[section_name].append('mode tcp')
             else:
                 self.__content_map[section_name].append('mode %s' % protocol)
             if protocol == 'http' or protocol == 'https':
                 self.__content_map[section_name].append('option forwardfor except 127.0.0.1')
-            if protocol == 'https':
+            if protocol == 'https' or protocol == 'ssl':
                 self.__content_map[section_name].append('bind 0.0.0.0:%s ssl crt %s' % (port, cert))
             else: 
                 self.__content_map[section_name].append('bind 0.0.0.0:%s' % port)
@@ -171,7 +173,7 @@ class ConfBuilderHaproxy(ConfBuilder):
                 self.__content_map[section_name].append('log %s local2 info' % config.CW_LISTENER_DOM_SOCKET)
                 if protocol == 'http' or protocol == 'https':
                     self.__content_map[section_name].append('log-format httplog\ %f\ %b\ %s\ %ST\ %ts\ %Tq\ %Tw\ %Tc\ %Tr\ %Tt') 
-                elif protocol == 'tcp':
+                elif protocol == 'tcp' or protocol == 'ssl':
                     self.__content_map[section_name].append('log-format tcplog\ %f\ %b\ %s\ %ts\ %Tw\ %Tc\ %Tt') 
 
             def_backend = 'backend-%s-%s' % (protocol, port)
@@ -179,6 +181,8 @@ class ConfBuilderHaproxy(ConfBuilder):
            
             if protocol == 'https':
                 backend_attribute = 'mode http\n  balance roundrobin' 
+            elif protocol == 'ssl':
+                backend_attribute = 'mode tcp\n  balance roundrobin' 
             else:
                 backend_attribute = 'mode %s\n  balance roundrobin' % protocol 
             if cookie_expire and cookie_name:
