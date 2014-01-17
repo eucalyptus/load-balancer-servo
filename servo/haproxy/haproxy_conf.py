@@ -34,16 +34,16 @@ class ConfBuilder(object):
     def build(self, destination=None):
         raise NotImplementedException
 
-    def add(self, protocol, port, instances=[], cookie_name=None, cookie_expire=None, comment=None):
+    def add(self, protocol, port, instances=[], cookie_name=None, cookie_expire=None, cert=None, comment=None):
         try:
-            self.add_protocol_port(protocol, port, cookie_name, cookie_expire, comment )
+            self.add_protocol_port(protocol, port, cookie_name, cookie_expire, cert, comment )
             for instance in instances:
                 self.add_backend(port, instance)
         except Exception, err:
             servo.log.error('failed to add protocol-port: %s' % err)
         return self
 
-    def add_protocol_port(self, protocol, port, cookie_name=None, cookie_expire=None, comment=None):
+    def add_protocol_port(self, protocol, port, cookie_name=None, cookie_expire=None, cert=None, comment=None):
         raise NotImplementedError
   
     def remove_protocol_port(self, port):
@@ -138,11 +138,11 @@ class ConfBuilderHaproxy(ConfBuilder):
                     break
         return backend_name
 
-    def add_protocol_port(self, protocol='tcp', port=80, cookie_name=None, cookie_expire=None, comment=None):
+    def add_protocol_port(self, protocol='tcp', port=80, cookie_name=None, cookie_expire=None, cert=None, comment=None):
         '''
             add new protocol/port to the config file. if there's existing one, pass
         '''
-        if not ( protocol == 'http' or protocol == 'tcp'):
+        if not ( protocol == 'http' or protocol == 'tcp' or protocol == 'https'):
             raise Exception('unknown protocol')
 
         # make sure no other frontend listen on the port
@@ -156,22 +156,31 @@ class ConfBuilderHaproxy(ConfBuilder):
             self.__content_map[section_name]= [] 
             if comment is not None:
                 self.__content_map[section_name].append('# %s'%comment)
-            self.__content_map[section_name].append('mode %s' % protocol)
-            if protocol == 'http':
+            if protocol == 'https':
+                self.__content_map[section_name].append('mode http')
+            else:
+                self.__content_map[section_name].append('mode %s' % protocol)
+            if protocol == 'http' or protocol == 'https':
                 self.__content_map[section_name].append('option forwardfor except 127.0.0.1')
-            self.__content_map[section_name].append('bind 0.0.0.0:%s' % port)
+            if protocol == 'https':
+                self.__content_map[section_name].append('bind 0.0.0.0:%s ssl crt %s' % (port, cert))
+            else: 
+                self.__content_map[section_name].append('bind 0.0.0.0:%s' % port)
 
             if config.ENABLE_CLOUD_WATCH:  # this may have significant performance impact
                 self.__content_map[section_name].append('log %s local2 info' % config.CW_LISTENER_DOM_SOCKET)
-                if protocol == 'http':
+                if protocol == 'http' or protocol == 'https':
                     self.__content_map[section_name].append('log-format httplog\ %f\ %b\ %s\ %ST\ %ts\ %Tq\ %Tw\ %Tc\ %Tr\ %Tt') 
                 elif protocol == 'tcp':
                     self.__content_map[section_name].append('log-format tcplog\ %f\ %b\ %s\ %ts\ %Tw\ %Tc\ %Tt') 
 
             def_backend = 'backend-%s-%s' % (protocol, port)
             self.__content_map[section_name].append('default_backend %s' % def_backend)
-            
-            backend_attribute = 'mode %s\n  balance roundrobin' % protocol 
+           
+            if protocol == 'https':
+                backend_attribute = 'mode http\n  balance roundrobin' 
+            else:
+                backend_attribute = 'mode %s\n  balance roundrobin' % protocol 
             if cookie_expire and cookie_name:
                 servo.log.error('both duration-based and app-controlled cookie stickiness are enabled. something is wrong!')
             if ( protocol == 'http' or protocol == 'https' ) and cookie_expire:

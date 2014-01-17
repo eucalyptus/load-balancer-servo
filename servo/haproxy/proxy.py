@@ -18,8 +18,10 @@
 import servo
 from servo.util import TimeoutError
 import servo.config as config
+import servo.ws
+from servo.floppy import FloppyCredential
 from listener import Listener
-import os
+import os, stat
 import shutil
 import traceback
 import sys
@@ -137,11 +139,52 @@ class ProxyCreate(ProxyAction):
         for host in self.__listener.instances():
             instance = {'hostname':host, 'port': self.__listener.instance_port(), 'protocol': self.__listener.instance_protocol()}
             instances.append(instance)
+
+        #in case of https/ssl protocol, download server certificate from EUARE
+        if (self.__listener.protocol() == 'https' or self.__listener.protocol() == 'ssl') and self.__listener.ssl_cert_arn() != None:
+            try:
+                f = FloppyCredential() 
+            except Exception, err:
+                servo.log.error('failed to get credentials from floppy: %s' % err)
+                return
+ 
+            try:
+                host = config.get_clc_host()
+                access_key_id = config.get_access_key_id()
+                secret_access_key = config.get_secret_access_key()
+                security_token = config.get_security_token()
+                con = servo.ws.connect_euare(host_name=host, aws_access_key_id = access_key_id, aws_secret_access_key=secret_access_key, security_token=security_token)
+                cert_arn = self.__listener.ssl_cert_arn().strip()
+                cert= con.download_server_certificate(f.get_instance_pub_key(), f.get_instance_pk(), f.get_iam_pub_key(), f.get_iam_token(), cert_arn)
+            except Exception, err:
+                servo.log.error('failed to download the server certificate: %s' % err)
+                return
+
+            try:
+                arn = self.__listener.ssl_cert_arn()
+                cert_name = arn.rpartition('/')[2]
+                cert_dir = "%s/%s" % (config.RUN_ROOT, cert_name)
+                if not os.path.exists(cert_dir):
+                    os.makedirs(cert_dir)
+                else:
+                    shutil.rmtree(cert_dir)
+                    os.makedirs(cert_dir)
+
+                cert_file = cert_dir+"/cert.pem"
+                f_cert = open(cert_file, 'w')
+                f_cert.write(cert.get_certificate())
+                f_cert.write(cert.get_private_key())
+                f_cert.close()
+                self.__listener.set_ssl_cert_path(cert_file)
+                servo.log.info('ssl certificate downloaded: %s' % arn)
+            except Exception, err:
+                servo.log.error('failed to create the server certificate files: %s' % err)
+        
         try: 
             comment=None
             if self.__listener.loadbalancer() is not None:
                 comment="lb-%s" % self.__listener.loadbalancer()
-            builder.add(protocol=self.__listener.protocol(), port=self.__listener.port(), instances=instances, cookie_name=self.__listener.app_cookie_name(), cookie_expire=self.__listener.lb_cookie_expiration(), comment=comment).build(CONF_FILE)
+            builder.add(protocol=self.__listener.protocol(), port=self.__listener.port(), instances=instances, cookie_name=self.__listener.app_cookie_name(), cookie_expire=self.__listener.lb_cookie_expiration(), cert=self.__listener.ssl_cert_path(), comment=comment).build(CONF_FILE)
         except Exception, err:
             self.__status =ProxyAction.STATUS_ERROR
             servo.log.error('failed to add new frontend to the config: %s' % err)

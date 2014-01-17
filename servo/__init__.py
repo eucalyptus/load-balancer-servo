@@ -24,10 +24,14 @@ from servo.logutil import log, set_loglevel
 from servo.config import set_pidfile, set_boto_config
 from servo.main_loop import ServoLoop
 from servo.cw_loop import CWLoop
+import subprocess
 
 __version__ = '1.0.0-dev'
 Version = __version__
 
 def start_servo():
+    cmd_line = 'modprobe floppy > /dev/null'
+    if subprocess.call(cmd_line, shell=True) != 0:
+        servo.log.error('failed to load floppy driver')
     CWLoop().start()
     ServoLoop().start()

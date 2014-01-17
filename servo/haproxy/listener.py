@@ -35,6 +35,7 @@ class Listener(object):
         self.__cookie_expiration = cookie_expiration  #if LBCookieStickiness is enabled
         self.__ssl_cert = ssl_cert
         self.__instances = set() 
+        self.__ssl_cert_path = None
  
     def protocol(self):
         return self.__protocol
@@ -47,6 +48,9 @@ class Listener(object):
 
     def instance_protocol(self):
         return self.__instance_protocol
+
+    def ssl_cert_arn(self):
+        return self.__ssl_cert
 
     def add_instance(self, hostname):
         self.__instances.add(hostname)
@@ -69,6 +73,12 @@ class Listener(object):
     def loadbalancer(self):
         return self.__loadbalancer
 
+    def set_ssl_cert_path(self, path):
+        self.__ssl_cert_path = path
+
+    def ssl_cert_path(self):
+        return self.__ssl_cert_path
+    
     def __eq__(self, other):
         if not isinstance(other, Listener):
             return False

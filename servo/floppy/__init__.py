@@ -77,5 +77,3 @@ class FloppyCredential(object):
 
     def get_iam_token(self):
         return self.iam_token 
-
-      

@@ -102,7 +102,7 @@ class ServoLoop(object):
                                 port=listener.load_balancer_port
                                 instance_port=listener.instance_port
                                 instance_protocol=None # TODO: boto doesn't have the field
-                                ssl_cert=None # TODO: not supported
+                                ssl_cert=str(listener.ssl_certificate_id)
                                 cookie_expiration = ServoLoop.get_cookie_expiration(listener)
                                 cookie_name = ServoLoop.get_cookie_name(listener)
                                 l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name, cookie_name=cookie_name, cookie_expiration=cookie_expiration)
