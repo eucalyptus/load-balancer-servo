@@ -24,6 +24,7 @@ Requires:       sudo
 Requires:       crontabs
 Requires:       ntp
 Requires:       ntpdate
+Requires:       m2crypto
 Requires(pre):  %{_sbindir}/useradd
 
 %description
@@ -86,6 +87,9 @@ fi
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/boto.cfg
 
 %changelog
+* Mon Jan 20 2014 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.2-0
+- Add m2crypto as a dependency
+
 * Tue Dec 10 2013 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.2-0
 - Fix port for communication with CLC
 
