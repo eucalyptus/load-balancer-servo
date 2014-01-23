@@ -30,7 +30,7 @@ __version__ = '1.0.0-dev'
 Version = __version__
 
 def start_servo():
-    cmd_line = 'modprobe floppy > /dev/null'
+    cmd_line = 'sudo modprobe floppy > /dev/null'
     if subprocess.call(cmd_line, shell=True) != 0:
         servo.log.error('failed to load floppy driver')
     CWLoop().start()

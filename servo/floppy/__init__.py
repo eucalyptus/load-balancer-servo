@@ -50,7 +50,7 @@ class FloppyCredential(object):
 
     @staticmethod
     def is_floppy_mounted(dev_str='/dev/fd0'):
-        cmd_line = 'mount | grep %s > /dev/null' % dev_str
+        cmd_line = 'sudo mount | grep %s > /dev/null' % dev_str
         if subprocess.call(cmd_line, shell=True) == 0:
             return True
         else:
@@ -60,7 +60,7 @@ class FloppyCredential(object):
     def mount_floppy(dev='/dev/fd0', dir='/mnt/floppy'):
         if not os.path.exists(dir):
             os.makedirs(dir)
-        cmd_line = 'mount %s %s' % (dev,dir)
+        cmd_line = 'sudo mount %s %s' % (dev,dir)
         if subprocess.call(cmd_line, shell=True) == 0:
             servo.log.debug('floppy disk mounted on '+dir) 
         else:
