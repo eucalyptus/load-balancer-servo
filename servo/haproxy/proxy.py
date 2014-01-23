@@ -176,6 +176,7 @@ class ProxyCreate(ProxyAction):
                     f_cert.write(cert.get_certificate())
                     f_cert.write(cert.get_private_key())
                     f_cert.close()
+                    os.chmod(cert_file, 400)
                 self.__listener.set_ssl_cert_path(cert_file)
                 servo.log.info('ssl certificate ready for use: %s' % arn)
             except Exception, err:

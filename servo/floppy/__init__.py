@@ -20,6 +20,7 @@ import commands
 import os
 import json
 import servo
+import servo.config as config
 
 class FloppyCredential(object):
     def __init__(self):
@@ -28,11 +29,12 @@ class FloppyCredential(object):
             if not self.is_floppy_mounted():
                 self.mount_floppy()
             f = None
-            f = open('/mnt/floppy/credential')
+            f = open('%s/credential' % config.FLOPPY_MOUNT_DIR)
             cred = None
             if f:
                 cred = credential =json.load(f)
                 f.close()
+            self.unmount_floppy()
             self.iam_pub_key = cred['iam_pub_key']
             self.iam_pub_key = self.iam_pub_key.strip().decode('base64')
             self.instance_pub_key = cred['instance_pub_key']
@@ -57,7 +59,7 @@ class FloppyCredential(object):
             return False
 
     @staticmethod
-    def mount_floppy(dev='/dev/fd0', dir='/mnt/floppy'):
+    def mount_floppy(dev='/dev/fd0', dir=config.FLOPPY_MOUNT_DIR):
         if not os.path.exists(dir):
             os.makedirs(dir)
         cmd_line = 'sudo mount %s %s' % (dev,dir)
@@ -65,6 +67,16 @@ class FloppyCredential(object):
             servo.log.debug('floppy disk mounted on '+dir) 
         else:
             raise Exception('failed to mount floppy')
+
+    @staticmethod
+    def unmount_floppy(dir=config.FLOPPY_MOUNT_DIR):
+        if not os.path.exists(dir):
+            return
+        cmd_line = 'sudo umount %s' % dir
+        if subprocess.call(cmd_line, shell=True) == 0:
+            servo.log.debug('floppy disk unmounted on '+dir) 
+        else:
+            raise Exception('failed to unmount floppy')
     
     def get_iam_pub_key(self):
         return self.iam_pub_key
