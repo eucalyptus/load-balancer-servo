@@ -69,6 +69,8 @@ def query_user_data():
     resp, content = httplib2.Http().request("http://169.254.169.254/latest/user-data")
     if resp['status'] != '200' or len(content) <= 0:
         raise Exception('could not query the userdata')
+    lines = content.split('\n')
+    content = lines[len(lines)-1]  
     #format of userdata = "key1=value1;key2=value2;..."
     kvlist = content.split(';')
     for word in kvlist:

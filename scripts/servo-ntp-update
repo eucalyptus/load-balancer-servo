@@ -34,6 +34,8 @@ ADDR_RE = re.compile(r'^[a-zA-Z0-9\.\-]+$')
 
 
 def parse_userdata(data):
+    lines = data.split('\n')
+    data = lines[len(lines)-1]  
     return dict(item.split('=') for item in data.strip(';').split(';'))
 
 def backup_orig():
