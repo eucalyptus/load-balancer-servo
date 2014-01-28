@@ -174,6 +174,7 @@ class ProxyCreate(ProxyAction):
                 if not os.path.exists(cert_file):
                     f_cert = open(cert_file, 'w')
                     f_cert.write(cert.get_certificate())
+                    f_cert.write("\n");
                     f_cert.write(cert.get_private_key())
                     f_cert.close()
                     os.chmod(cert_file, 400)
