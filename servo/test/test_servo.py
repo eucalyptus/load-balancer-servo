@@ -34,13 +34,14 @@ def describe(servo_id=None, host_name=None, port=80, aws_access_key_id=None, aws
     lb = con.get_servo_load_balancers(servo_id)
     print "loadbalancer: %s" % lb
 
-def download_cert():
+def download_cert(cert_arn = None):
     host = config.get_clc_host()
     access_key_id = config.get_access_key_id()
     secret_access_key = config.get_secret_access_key()
     security_token = config.get_security_token()
     con = servo.ws.connect_euare(host_name=host, aws_access_key_id = access_key_id, aws_secret_access_key=secret_access_key, security_token=security_token)
-    cert_arn = "arn:aws:iam::450510498576:server-certificate/mycert"
+    if not cert_arn:
+        cert_arn = "arn:aws:iam::450510498576:server-certificate/mycert"
     f = FloppyCredential() 
     cert= con.download_server_certificate(f.get_instance_pub_key(), f.get_instance_pk(), f.get_iam_pub_key(), f.get_iam_token(), cert_arn)
     print cert.get_certificate()

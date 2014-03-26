@@ -82,6 +82,7 @@ class ProxyActionDefaultTransaction(ProxyActionTransaction):
                  return False
 
          # kill and restart the haproxy process
+         proc = None
          try:
              proc = HaproxyProcess(haproxy_bin=config.HAPROXY_BIN, conf_file=CONF_FILE, pid_path=PID_PATH, use_sudo=True)
              if proc.status() == HaproxyProcess.TERMINATED:
