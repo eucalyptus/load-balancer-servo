@@ -62,7 +62,7 @@ class FloppyCredential(object):
     def mount_floppy(dev='/dev/fd0', dir=config.FLOPPY_MOUNT_DIR):
         if not os.path.exists(dir):
             os.makedirs(dir)
-        cmd_line = 'sudo mount %s %s' % (dev,dir)
+        cmd_line = 'sudo mount -o umask=0277,uid=servo,gid=servo %s %s' % (dev,dir)
         if subprocess.call(cmd_line, shell=True) == 0:
             servo.log.debug('floppy disk mounted on '+dir) 
         else:
