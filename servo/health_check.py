@@ -136,7 +136,6 @@ class InstanceHealthChecker(threading.Thread):
             aws_access_key_id = config.get_access_key_id()
             aws_secret_access_key = config.get_secret_access_key()
             security_token = config.get_security_token()
-            con = servo.ws.connect_elb(host_name=elb_host, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
 
             target = health_check_config.target
             result = None
@@ -163,6 +162,7 @@ class InstanceHealthChecker(threading.Thread):
                     self.inst_status = 'InService'
                     servo.log.debug('Reported %s InService' % self.instance_id)
                     try:
+                        con = servo.ws.connect_elb(host_name=elb_host, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
                         con.put_instance_health(servo_instance_id, [instance])
                     except Exception, err:
                         servo.log.error('failed to post servo states: %s' % err)
@@ -176,6 +176,7 @@ class InstanceHealthChecker(threading.Thread):
                     self.inst_status = 'OutOfService'
                     servo.log.debug('Reported %s OutOfService' % self.instance_id)
                     try:
+                        con = servo.ws.connect_elb(host_name=elb_host, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
                         con.put_instance_health(servo_instance_id, [instance])
                     except Exception, err:
                         servo.log.error('failed to post servo states: %s' % err)
