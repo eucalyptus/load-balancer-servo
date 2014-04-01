@@ -120,9 +120,10 @@ class ServoLoop(object):
         
           # (future) put health check results to the elb service
           # (future) put cloudwatch metrics to the elb service
-            start_time = time.time()
-            while time.time() - start_time < config.QUERY_PERIOD_SEC and self.__status == ServoLoop.RUNNING:
+            query_period_delay = config.QUERY_PERIOD_SEC
+            while query_period_delay > 0 and self.__status == ServoLoop.RUNNING:
                 time.sleep(1)
+                query_period_delay -= 1
 
         self.__status = ServoLoop.STOPPED
 

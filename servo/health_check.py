@@ -185,10 +185,11 @@ class InstanceHealthChecker(threading.Thread):
                 healthy_count = 0
             if unhealthy_count > health_check_config.unhealthy_threshold:
                 unhealthy_count = 0
-            start_time = time.time()
-            while time.time() - start_time < health_check_config.interval and self.running:
+            health_check_delay = health_check_config.interval
+            while health_check_delay > 0 and self.running:
                 time.sleep(1)
-           
+                health_check_delay -= 1
+
     def check_http(self, target):
         target = target.replace('HTTP','').replace('http','').replace('Http','').replace(':','')
         idx = target.find('/')

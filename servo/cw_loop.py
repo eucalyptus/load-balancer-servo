@@ -37,10 +37,6 @@ class CWLoop(threading.Thread):
             servo.log.error('some required parameters are missing; failed to start cloudwatch report loop')
             return
 
-        start_time = time.time()
-        while time.time() - start_time < config.CWATCH_REPORT_PERIOD_SEC and self.running:
-            time.sleep(1)
-
         while self.running:
             aws_access_key_id = config.get_access_key_id()
             aws_secret_access_key = config.get_secret_access_key()
@@ -52,10 +48,11 @@ class CWLoop(threading.Thread):
                 servo.log.debug('reported the metrics: %s' % metric)
             except Exception, err:
                 servo.log.error('failed to report the cloudwatch metrics: %s', err)
- 
-            start_time = time.time()
-            while time.time() - start_time < config.CWATCH_REPORT_PERIOD_SEC and self.running:
+
+            cw_loop_delay = config.CWATCH_REPORT_PERIOD_SEC
+            while cw_loop_delay > 0 and self.running:
                 time.sleep(1)
+                cw_loop_delay -= 1
 
     def stop(self):
         self.running = False
