@@ -10,12 +10,13 @@ from servo.ssl.server_cert import ServerCertificate
 import time
 import M2Crypto
 from collections import Iterable
+import servo.config as config
 
 def connect_euare(host_name=None, port=80, path="services/Euare", aws_access_key_id=None, aws_secret_access_key=None, security_token=None, **kwargs):
-    return EucaEuareConnection(host=host_name, port=port, path=path, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token, **kwargs)
+    return EucaEuareConnection(host=config.get_euare_service_url(), port=port, path=path, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token, **kwargs)
 
-def connect_elb(host_name=None, port=80, cluster=None, path="services/LoadBalancing", aws_access_key_id=None, aws_secret_access_key=None, security_token = None, **kwargs):
-    region=RegionInfo(name=cluster, endpoint=host_name)
+def connect_elb(host_name=None, port=8773, cluster=None, path="services/LoadBalancing", aws_access_key_id=None, aws_secret_access_key=None, security_token = None, **kwargs):
+    region=RegionInfo(name=cluster, endpoint=config.get_elb_service_url())
     
     return EucaELBConnection(region=region, port=port, path=path, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token,  **kwargs)
 

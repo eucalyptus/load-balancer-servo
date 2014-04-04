@@ -59,7 +59,7 @@ class ServoLoop(object):
                 access_key_id = config.get_access_key_id()
                 secret_access_key = config.get_secret_access_key()
                 security_token = config.get_security_token()
-                con = servo.ws.connect_elb(host_name=self.__elb_host, aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key, security_token=security_token)
+                con = servo.ws.connect_elb(aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key, security_token=security_token)
                 lbs = con.get_servo_load_balancers(self.__instance_id)
             except Exception, err:
                 servo.log.error('failed to query the elb service: %s' % err)

@@ -112,6 +112,12 @@ def get_clc_port():
 def get_ec2_path():
     return get_value('eucalyptus_path')
 
+def get_elb_service_url():
+    return get_value('elb_service_url')
+
+def get_euare_service_url():
+    return get_value('euare_service_url')
+
 __availability_zone = None
 def get_availability_zone():
     global __availability_zone

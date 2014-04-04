@@ -1,0 +1,67 @@
+#!/usr/bin/python -tt
+#
+# Copyright 2014 Eucalyptus Systems, Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/.
+#
+# Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
+# CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
+# additional information or have any questions.
+
+import os
+import shutil
+import sys
+import syslog
+import tempfile
+import urllib2
+
+USERDATA_URL = 'http://169.254.169.254/latest/user-data'
+
+def parse_userdata(data):
+    lines = data.split('\n')
+    data = lines[len(lines)-1]  
+    return dict(item.split('=') for item in data.strip(';').split(';'))
+
+syslog.openlog(sys.argv[0])
+syslog.syslog("Starting ELB dns resolv check")
+try:
+    syslog.syslog("Reading user data from {0}".format(USERDATA_URL))
+    out = urllib2.urlopen(USERDATA_URL).read()
+except urllib2.URLError as ex:
+    syslog.syslog(str(ex))
+    sys.exit(1)
+
+userdata = parse_userdata(out)
+syslog.syslog("userdata: {0}".format(userdata))
+dns_server = userdata.get('dns_server', None)
+if dns_server:
+    syslog.syslog("Found DNS server(s) in userdata: {0}".format(dns_server))
+    tmpfile = tempfile.NamedTemporaryFile(prefix='euca_resolv')
+    dns_added = False
+    with open('/etc/resolv.conf', 'r') as resolvfile:
+        for line in resolvfile.readlines():
+            if line.find("nameserver")>=0 and (not dns_added) and (line.find(dns_server) < 0):
+                tmpfile.write("nameserver {0}\n".format(dns_server))
+                dns_added = True
+            if line.find(dns_server) < 0:
+                tmpfile.write(line)
+    tmpfile.flush()
+    
+    syslog.syslog("Updating /etc/resolv")
+    shutil.move('/etc/resolv.conf', '/etc/resolv.conf.bak')
+    shutil.copyfile(tmpfile.name, '/etc/resolv.conf')
+    os.chmod('/etc/resolv.conf', 0644)
+    os.chown('/etc/resolv.conf', 0, 0)
+    syslog.syslog("/etc/resolv.conf updated")
+else:
+    syslog.syslog("No DNS server specified")
