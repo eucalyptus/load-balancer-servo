@@ -20,7 +20,7 @@ import os
 import servo.ws
 import servo.config as config
 from servo.floppy import FloppyCredential
-def describe(servo_id=None, host_name=None, port=80, aws_access_key_id=None, aws_secret_access_key=None):
+def describe(servo_id=None, host_name=None, port=8773, aws_access_key_id=None, aws_secret_access_key=None):
     if aws_access_key_id is None:  
         aws_access_key_id=os.getenv('EC2_ACCESS_KEY')
     if aws_secret_access_key is None:
