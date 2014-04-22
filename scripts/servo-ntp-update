@@ -44,14 +44,21 @@ def backup_orig():
         syslog.syslog("Writing original config to /etc/ntp.conf.orig")
         shutil.copyfile('/etc/ntp.conf', '/etc/ntp.conf.orig')
 
+lock_file = '/var/lib/load-balancer-servo/ntp.lock'
+def leave_lock():
+    try:
+        open(lock_file, 'w').close() 
+    except Exception:
+        syslog.syslog("Unable to leave ntp lock file")
+
 syslog.openlog(sys.argv[0])
 syslog.syslog("Starting NTP server check")
-
 try:
     syslog.syslog("Reading user data from {0}".format(USERDATA_URL))
     out = urllib2.urlopen(USERDATA_URL).read()
 except urllib2.URLError as ex:
     syslog.syslog(str(ex))
+    leave_lock()
     sys.exit(1)
 
 userdata = parse_userdata(out)
@@ -104,3 +111,5 @@ if valid_servers:
             syslog.syslog("Failed to start ntpd")
 else:
     syslog.syslog("No NTP server specified")
+
+leave_lock()

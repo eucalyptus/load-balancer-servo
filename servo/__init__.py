@@ -25,13 +25,26 @@ from servo.config import set_pidfile, set_boto_config
 from servo.main_loop import ServoLoop
 from servo.cw_loop import CWLoop
 import subprocess
+import os
+import time
 
 __version__ = '1.0.0-dev'
 Version = __version__
 
+def spin_locks():
+    try:
+        while not (os.path.exists("/var/lib/load-balancer-servo/dns.lock") and os.path.exists("/var/lib/load-balancer-servo/ntp.lock")):
+            time.sleep(2)
+            log.debug('waiting on dns and ntp setup (reboot if continued)')
+        os.remove("/var/lib/load-balancer-servo/dns.lock")
+        os.remove("/var/lib/load-balancer-servo/ntp.lock")
+    except Exception, err:
+        log.error('failed to spin on locks: %s' % err)
+
 def start_servo():
+    spin_locks()
     cmd_line = 'sudo modprobe floppy > /dev/null'
     if subprocess.call(cmd_line, shell=True) != 0:
-        servo.log.error('failed to load floppy driver')
+        log.error('failed to load floppy driver')
     CWLoop().start()
     ServoLoop().start()

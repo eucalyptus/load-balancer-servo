@@ -146,3 +146,4 @@ def appcookie_timeout():
         return 60*int(get_value('app-cookie-duration'))
     except Exception, err:
         return 60*24 #24 hours
+
