@@ -69,7 +69,8 @@ if dns_server:
         tmpfile = tempfile.NamedTemporaryFile(prefix='euca_resolv')
         with open('/etc/resolv.conf', 'r') as resolvfile:
             for line in resolvfile.readlines():
-                tmpfile.write(line)
+                if line.find(dns_server) < 0:
+                    tmpfile.write(line)
         tmpfile.write("nameserver {0}\n".format(dns_server))
         tmpfile.flush()
     
