@@ -53,27 +53,30 @@ except urllib2.URLError as ex:
 userdata = parse_userdata(out)
 syslog.syslog("userdata: {0}".format(userdata))
 dns_server = userdata.get('dns_server', None)
+if dns_server.find(',') >= 0:
+    dns_servers = dns_server.split(',')
+else:
+    dns_servers = [dns_server]
+
 if dns_server:
     syslog.syslog("Found DNS server(s) in userdata: {0}".format(dns_server))
     tmpfile = tempfile.NamedTemporaryFile(prefix='euca_resolv')
     dns_added = False
     with open('/etc/resolv.conf', 'r') as resolvfile:
         for line in resolvfile.readlines():
-            if line.find("nameserver")>=0 and (not dns_added) and (line.find(dns_server) < 0):
-                tmpfile.write("nameserver {0}\n".format(dns_server))
-                dns_added = True
-            if line.find(dns_server) < 0:
+            if line.find("nameserver") < 0:
                 tmpfile.write(line)
+            else:
+                tokens = line.split()
+                address = tokens[len(tokens)-1]
+                if len(address) > 4 and address not in dns_servers:
+                    dns_servers.append(address)
+
+    for server in dns_servers:
+        if len(server) > 4:
+            tmpfile.write("nameserver {0}\n".format(server))
     tmpfile.flush()
-    if not dns_added:
-        tmpfile = tempfile.NamedTemporaryFile(prefix='euca_resolv')
-        with open('/etc/resolv.conf', 'r') as resolvfile:
-            for line in resolvfile.readlines():
-                if line.find(dns_server) < 0:
-                    tmpfile.write(line)
-        tmpfile.write("nameserver {0}\n".format(dns_server))
-        tmpfile.flush()
-    
+
     syslog.syslog("Updating /etc/resolv")
     shutil.move('/etc/resolv.conf', '/etc/resolv.conf.bak')
     shutil.copyfile(tmpfile.name, '/etc/resolv.conf')
@@ -82,5 +85,4 @@ if dns_server:
     syslog.syslog("/etc/resolv.conf updated")
 else:
     syslog.syslog("No DNS server specified")
-
 leave_lock()
