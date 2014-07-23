@@ -8,7 +8,7 @@ Summary:        Configuration tool for the Eucalyptus LB
 Group:          Applications/System
 License:        GPLv3 
 URL:            http://www.eucalyptus.com
-Source0:        %{name}-%{version}.tar.gz
+Source0:        %{name}-%{version}.tar.xz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
