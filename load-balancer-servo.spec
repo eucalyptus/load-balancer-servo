@@ -31,7 +31,7 @@ Requires(pre):  %{_sbindir}/useradd
 Configuration tool for the Eucalyptus LB
 
 %prep
-%setup -q -n %{name}-%{version}%{?tar_suffix}
+%setup -q -n %{tarball_basedir}
 
 %build
 # Build CLI tools
