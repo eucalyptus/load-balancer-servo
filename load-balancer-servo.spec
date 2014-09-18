@@ -50,7 +50,6 @@ rm -rf $RPM_BUILD_ROOT
 install -p -m 0440 -D scripts/servo-sudoers.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sudoers.d/servo
 install -p -m 755 -D scripts/load-balancer-servo-init $RPM_BUILD_ROOT/%{_initddir}/load-balancer-servo
 install -p -m 755 -D scripts/servo-ntp-update $RPM_BUILD_ROOT%{_libexecdir}/%{name}/ntp-update
-install -p -m 755 -D scripts/servo-dns-update $RPM_BUILD_ROOT%{_libexecdir}/%{name}/dns-update
 install -m 6700 -d $RPM_BUILD_ROOT/%{_var}/{run,lib,log}/load-balancer-servo
 
 install -p -m 0750 -D %{name}.cron $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/%{name}
