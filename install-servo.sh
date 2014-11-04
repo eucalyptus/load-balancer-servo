@@ -38,5 +38,4 @@ chmod 700 /etc/load-balancer-servo
 
 # NTP cronjob
 install -p -m 755 -D scripts/servo-ntp-update /usr/libexec/load-balancer-servo/servo-ntp-update
-install -p -m 755 -D scripts/servo-dns-update /usr/libexec/load-balancer-servo/servo-dns-update
 install -p -m 0750 -D scripts/load-balancer-servo.cron /etc/cron.d/load-balancer-servo

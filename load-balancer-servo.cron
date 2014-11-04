@@ -1,2 +1,1 @@
 @reboot root /bin/bash -c "python /usr/libexec/load-balancer-servo/ntp-update"
-@reboot root /bin/bash -c "python /usr/libexec/load-balancer-servo/dns-update"

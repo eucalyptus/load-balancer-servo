@@ -165,7 +165,7 @@ class ConfBuilderHaproxy(ConfBuilder):
             if protocol == 'http' or protocol == 'https':
                 self.__content_map[section_name].append('option forwardfor except 127.0.0.1')
             if protocol == 'https' or protocol == 'ssl':
-                self.__content_map[section_name].append('bind 0.0.0.0:%s ssl crt %s' % (port, cert))
+                self.__content_map[section_name].append('bind 0.0.0.0:%s ssl crt %s no-sslv3' % (port, cert))
             else: 
                 self.__content_map[section_name].append('bind 0.0.0.0:%s' % port)
 
