@@ -164,8 +164,6 @@ class ConfBuilderHaproxy(ConfBuilder):
                 self.__content_map[section_name].append('mode %s' % protocol)
             if protocol == 'http' or protocol == 'https':
                 self.__content_map[section_name].append('option forwardfor except 127.0.0.1')
-                self.__content_map[section_name].append('timeout http-keep-alive 50ms')
-                self.__content_map[section_name].append('timeout http-request 5s')
             if protocol == 'https' or protocol == 'ssl':
                 self.__content_map[section_name].append('bind 0.0.0.0:%s ssl crt %s no-sslv3' % (port, cert))
             else: 
