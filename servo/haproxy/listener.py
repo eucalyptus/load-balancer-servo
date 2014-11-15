@@ -17,7 +17,7 @@
 # additional information or have any questions.
 
 class Listener(object):
-    def __init__(self, protocol, port, instance_port=None, instance_protocol=None, ssl_cert=None, loadbalancer=None, cookie_name=None, cookie_expiration=None):
+    def __init__(self, protocol, port, instance_port=None, instance_protocol=None, ssl_cert=None, loadbalancer=None, cookie_name=None, cookie_expiration=None, connection_idle_timeout=None):
         self.__loadbalancer = loadbalancer  #loadbalancer name for debugging
         if protocol is not None:
             protocol = protocol.lower()
@@ -36,6 +36,7 @@ class Listener(object):
         self.__ssl_cert = ssl_cert
         self.__instances = set() 
         self.__ssl_cert_path = None
+        self.__connection_idle_timeout = connection_idle_timeout
  
     def protocol(self):
         return self.__protocol
@@ -78,6 +79,12 @@ class Listener(object):
 
     def ssl_cert_path(self):
         return self.__ssl_cert_path
+
+    def set_connection_idle_timeout(self, timeout):
+        self.__connection_idle_timeout = timeout
+
+    def connection_idle_timeout(self):
+        return self.__connection_idle_timeout
     
     def __eq__(self, other):
         if not isinstance(other, Listener):
@@ -95,6 +102,8 @@ class Listener(object):
         if self.__cookie_name != other.__cookie_name:
             return False
         if self.__cookie_expiration != other.__cookie_expiration:
+            return False
+        if self.__connection_idle_timeout != other.__connection_idle_timeout:
             return False
         if len(self.__instances.symmetric_difference(other.__instances)) > 0:
             return False

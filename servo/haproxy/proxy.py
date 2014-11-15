@@ -187,7 +187,7 @@ class ProxyCreate(ProxyAction):
             comment=None
             if self.__listener.loadbalancer() is not None:
                 comment="lb-%s" % self.__listener.loadbalancer()
-            builder.add(protocol=self.__listener.protocol(), port=self.__listener.port(), instances=instances, cookie_name=self.__listener.app_cookie_name(), cookie_expire=self.__listener.lb_cookie_expiration(), cert=self.__listener.ssl_cert_path(), comment=comment).build(CONF_FILE)
+            builder.add(protocol=self.__listener.protocol(), port=self.__listener.port(), instances=instances, cookie_name=self.__listener.app_cookie_name(), cookie_expire=self.__listener.lb_cookie_expiration(), cert=self.__listener.ssl_cert_path(), comment=comment, connection_idle_timeout = self.__listener.connection_idle_timeout()).build(CONF_FILE)
         except Exception, err:
             self.__status =ProxyAction.STATUS_ERROR
             servo.log.error('failed to add new frontend to the config: %s' % err)

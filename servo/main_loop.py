@@ -71,7 +71,17 @@ class ServoLoop(object):
                 # call update_listeners
                 received=[] 
                 try:
+                    conn_idle_timeout = config.CONNECTION_IDLE_TIMEOUT
                     for lb in lbs:
+                        try:
+                            attr = con.get_load_balancer_attributes(lb.name)
+                            conn_idle_timeout = attr.connecting_settings.idle_timeout
+                            if int(conn_idle_timeout) < 1:
+                                conn_idle_timeout = 1
+                            elif int(conn_idle_timeout) > 3600:
+                                conn_idle_timeout = 3600
+                        except Exception, err:
+                            servo.log.warning('failed to get connection idle timeout: %s' % str(err))
                         if lb.health_check is not None:
                             interval = lb.health_check.interval
                             healthy_threshold = lb.health_check.healthy_threshold
@@ -106,7 +116,7 @@ class ServoLoop(object):
                                 ssl_cert=str(listener.ssl_certificate_id)
                                 cookie_expiration = ServoLoop.get_cookie_expiration(listener)
                                 cookie_name = ServoLoop.get_cookie_name(listener)
-                                l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name, cookie_name=cookie_name, cookie_expiration=cookie_expiration)
+                                l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name, cookie_name=cookie_name, cookie_expiration=cookie_expiration, connection_idle_timeout=conn_idle_timeout)
                                 for inst_id in in_service_instances:
                                     hostname = servo.hostname_cache.get_hostname(inst_id)
                                     if hostname is not None: l.add_instance(hostname) 

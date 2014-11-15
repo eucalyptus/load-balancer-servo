@@ -34,16 +34,16 @@ class ConfBuilder(object):
     def build(self, destination=None):
         raise NotImplementedException
 
-    def add(self, protocol, port, instances=[], cookie_name=None, cookie_expire=None, cert=None, comment=None):
+    def add(self, protocol, port, instances=[], cookie_name=None, cookie_expire=None, cert=None, comment=None, connection_idle_timeout=None):
         try:
-            self.add_protocol_port(protocol, port, cookie_name, cookie_expire, cert, comment )
+            self.add_protocol_port(protocol, port, cookie_name, cookie_expire, cert, comment, connection_idle_timeout = connection_idle_timeout )
             for instance in instances:
                 self.add_backend(port, instance)
         except Exception, err:
             servo.log.error('failed to add protocol-port: %s' % err)
         return self
 
-    def add_protocol_port(self, protocol, port, cookie_name=None, cookie_expire=None, cert=None, comment=None):
+    def add_protocol_port(self, protocol, port, cookie_name=None, cookie_expire=None, cert=None, comment=None, connection_idle_timeout=None):
         raise NotImplementedError
   
     def remove_protocol_port(self, port):
@@ -138,7 +138,7 @@ class ConfBuilderHaproxy(ConfBuilder):
                     break
         return backend_name
 
-    def add_protocol_port(self, protocol='tcp', port=80, cookie_name=None, cookie_expire=None, cert=None, comment=None):
+    def add_protocol_port(self, protocol='tcp', port=80, cookie_name=None, cookie_expire=None, cert=None, comment=None, connection_idle_timeout=None):
         '''
             add new protocol/port to the config file. if there's existing one, pass
         '''
@@ -169,6 +169,9 @@ class ConfBuilderHaproxy(ConfBuilder):
             else: 
                 self.__content_map[section_name].append('bind 0.0.0.0:%s' % port)
 
+            if connection_idle_timeout:
+                self.__content_map[section_name].append('timeout client %ss' % connection_idle_timeout)
+
             if config.ENABLE_CLOUD_WATCH:  # this may have significant performance impact
                 self.__content_map[section_name].append('log %s local2 info' % config.CW_LISTENER_DOM_SOCKET)
                 if protocol == 'http' or protocol == 'https':
@@ -185,6 +188,10 @@ class ConfBuilderHaproxy(ConfBuilder):
                 backend_attribute = 'mode tcp\n  balance roundrobin' 
             else:
                 backend_attribute = 'mode %s\n  balance roundrobin' % protocol 
+
+            if connection_idle_timeout:
+                backend_attribute = '%s\n  timeout server %ss' % (backend_attribute, connection_idle_timeout)
+
             if cookie_expire and cookie_name:
                 servo.log.error('both duration-based and app-controlled cookie stickiness are enabled. something is wrong!')
             if ( protocol == 'http' or protocol == 'https' ) and cookie_expire:
@@ -195,7 +202,7 @@ class ConfBuilderHaproxy(ConfBuilder):
                     servo.log.error('failed to set cookie expiration: value is not a number type')
             elif ( protocol == 'http' or protocol == 'https' ) and cookie_name:
                 backend_attribute = '%s\n  appsession %s len %d timeout %dm' % (backend_attribute, cookie_name, config.appcookie_length(), config.appcookie_timeout())
-
+          
             # create the empty backend section
             self.__content_map['backend %s' % def_backend] = [backend_attribute]
         else:

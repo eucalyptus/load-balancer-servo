@@ -204,3 +204,10 @@ class EucaELBConnection(ELBConnection):
                         inst.id = inst_id
  
         return lbs
+
+    def get_load_balancer_attributes(self, load_balancer_name):
+        from servo.ws.attributes import LbAttributes
+        params = {'LoadBalancerName': load_balancer_name}
+        return self.get_object('DescribeLoadBalancerAttributes',
+                               params, LbAttributes)
+        return resp
