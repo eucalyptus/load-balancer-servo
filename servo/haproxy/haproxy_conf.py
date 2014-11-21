@@ -197,7 +197,8 @@ class ConfBuilderHaproxy(ConfBuilder):
             if ( protocol == 'http' or protocol == 'https' ) and cookie_expire:
                 try:
                     cookie_expire = int(cookie_expire)
-                    backend_attribute = '%s\n  cookie AWSELB insert indirect nocache maxidle %ds maxlife %ds' % (backend_attribute, cookie_expire, cookie_expire) 
+                    cache_control_header = '\n  http-response set-header Cache-control no-cache=\"set-cookie\"'
+                    backend_attribute = '%s%s\n  cookie AWSELB insert indirect maxidle %ds maxlife %ds' % (backend_attribute, cache_control_header, cookie_expire, cookie_expire) 
                 except exceptions.ValueError:
                     servo.log.error('failed to set cookie expiration: value is not a number type')
             elif ( protocol == 'http' or protocol == 'https' ) and cookie_name:
