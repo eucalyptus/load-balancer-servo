@@ -33,6 +33,7 @@ ENABLE_CLOUD_WATCH = True # affects the performance of haproxy
 CW_LISTENER_DOM_SOCKET ='/var/lib/load-balancer-servo/haproxy.sock'
 FLOPPY_MOUNT_DIR = RUN_ROOT+"/floppy"
 CONNECTION_IDLE_TIMEOUT = 60
+CONFIG_FILE = CONF_ROOT + "/servo.conf"
 
 # Apply default values in case user does not specify
 pidfile = DEFAULT_PIDFILE
@@ -66,24 +67,27 @@ def set_pidfile(filename):
     pidroot = os.path.dirname(pidfile)
 
 user_data_store={}  
-def query_user_data():
-    resp, content = httplib2.Http().request("http://169.254.169.254/latest/user-data")
-    if resp['status'] != '200' or len(content) <= 0:
-        raise Exception('could not query the userdata')
-    lines = content.split('\n')
-    content = lines[len(lines)-1]  
-    #format of userdata = "key1=value1;key2=value2;..."
-    kvlist = content.split(';')
-    for word in kvlist:
-        kv = word.split('=')
-        if len(kv) == 2:
-            user_data_store[kv[0]]=kv[1] 
+
+
+def read_config_file():
+    try:
+        f = open(CONFIG_FILE)
+        content = f.read()
+        lines = content.split('\n')
+        for l in lines:
+            if len(l.strip()):
+                kv = l.split('=')
+                if len(kv) == 2:
+                    user_data_store[kv[0]] = kv[1]
+    except Exception, err:
+        raise Exception('Could not read configuration file due to %s' % err)
+
 
 def get_value(key):
     if key in user_data_store:
        return user_data_store[key]
     else:
-        query_user_data()
+        read_config_file()
         if key not in user_data_store:
             raise Exception('could not find %s' % key) 
         return user_data_store[key]
