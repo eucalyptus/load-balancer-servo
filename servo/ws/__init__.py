@@ -2,15 +2,15 @@ import boto
 import boto.utils
 from boto.ec2.elb import ELBConnection
 from boto.ec2.regioninfo import RegionInfo
-from boto.ec2.elb.loadbalancer import LoadBalancer
 from boto.ec2.cloudwatch import CloudWatchConnection
 from boto.iam.connection import IAMConnection
+from servo.ws.loadbalancer import LoadBalancer
+import servo.config as config
 import servo.hostname_cache as hostname_cache
 from servo.ssl.server_cert import ServerCertificate
 import time
 import M2Crypto
 from collections import Iterable
-import servo.config as config
 
 def connect_euare(host_name=None, port=8773, path="services/Euare", aws_access_key_id=None, aws_secret_access_key=None, security_token=None, **kwargs):
     return EucaEuareConnection(host=config.get_euare_service_url(), port=port, path=path, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token, **kwargs)
@@ -202,12 +202,4 @@ class EucaELBConnection(ELBConnection):
                         ipaddr=token[1]
                         hostname_cache.register(inst_id, ipaddr)
                         inst.id = inst_id
- 
         return lbs
-
-    def get_load_balancer_attributes(self, load_balancer_name):
-        from servo.ws.attributes import LbAttributes
-        params = {'LoadBalancerName': load_balancer_name}
-        return self.get_object('DescribeLoadBalancerAttributes',
-                               params, LbAttributes)
-        return resp

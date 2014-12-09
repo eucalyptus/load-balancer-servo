@@ -74,7 +74,7 @@ class ServoLoop(object):
                     conn_idle_timeout = config.CONNECTION_IDLE_TIMEOUT
                     for lb in lbs:
                         try:
-                            attr = con.get_load_balancer_attributes(lb.name)
+                            attr = lb.attributes
                             conn_idle_timeout = attr.connecting_settings.idle_timeout
                             if int(conn_idle_timeout) < 1:
                                 conn_idle_timeout = 1
