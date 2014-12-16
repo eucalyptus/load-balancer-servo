@@ -123,6 +123,9 @@ def get_elb_service_url():
 def get_euare_service_url():
     return get_value('euare_service_url')
 
+def get_ntp_server_url():
+    return get_value('ntp_server')
+
 __availability_zone = None
 def get_availability_zone():
     global __availability_zone
