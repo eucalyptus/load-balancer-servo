@@ -26,6 +26,9 @@ Requires:       ntp
 Requires:       ntpdate
 Requires:       m2crypto
 Requires(pre):  %{_sbindir}/useradd
+Requires(post): chkconfig
+Requires(preun): chkconfig
+Requires(preun): initscripts
 
 %description
 Configuration tool for the Eucalyptus LB
@@ -65,7 +68,16 @@ getent passwd servo >/dev/null || \
 
 # Stop running services for upgrade
 if [ "$1" = "2" ]; then
-    /sbin/service load-balancer-servo stop 2>/dev/null || :
+    /sbin/service %{name} stop 2>/dev/null || :
+fi
+
+%post
+/sbin/chkconfig --add %{name}
+
+%preun
+if [ $1 -eq 0 ] ; then
+    /sbin/service %{name} stop >/dev/null 2>&1
+    /sbin/chkconfig --del %{name}
 fi
 
 %files
@@ -87,6 +99,9 @@ fi
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/boto.cfg
 
 %changelog
+* Tue Dec 16 2014 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.2-0
+- Added chkconfig changes
+
 * Mon Jan 20 2014 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.2-0
 - Add m2crypto as a dependency
 
