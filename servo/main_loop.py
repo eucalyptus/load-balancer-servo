@@ -153,7 +153,6 @@ class ServoLoop(object):
                 if policy_desc.policy_name in policy_names:
                     policy = LoadbalancerPolicy.from_policy_description(policy_desc)
                     if policy:
-                        servo.log.debug('import policy: %s' % policy)
                         policies.append(policy)
         except Exception, err:
             servo.log.error('failed to create policy objects: %s' % err)
