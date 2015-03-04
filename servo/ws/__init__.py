@@ -190,7 +190,6 @@ class EucaELBConnection(ELBConnection):
         params = {"InstanceId": servo_instance_id}
         lbs = self.get_list('DescribeLoadBalancersByServo', params,
                              [('member', LoadBalancer)])
-
         for lb in lbs:
             instances = []
             if lb.instances is not None and isinstance(lb.instances, Iterable):

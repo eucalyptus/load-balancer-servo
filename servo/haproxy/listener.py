@@ -17,7 +17,7 @@
 # additional information or have any questions.
 
 class Listener(object):
-    def __init__(self, protocol, port, instance_port=None, instance_protocol=None, ssl_cert=None, loadbalancer=None, cookie_name=None, cookie_expiration=None, connection_idle_timeout=None):
+    def __init__(self, protocol, port, instance_port=None, instance_protocol=None, ssl_cert=None, loadbalancer=None, policies = None, connection_idle_timeout=None):
         self.__loadbalancer = loadbalancer  #loadbalancer name for debugging
         if protocol is not None:
             protocol = protocol.lower()
@@ -31,11 +31,10 @@ class Listener(object):
             self.__instance_protocol = instance_protocol.lower()
         else:
             self.__instance_protocol = protocol
-        self.__cookie_name = cookie_name  #if AppCookieStickiness is enabled
-        self.__cookie_expiration = cookie_expiration  #if LBCookieStickiness is enabled
         self.__ssl_cert = ssl_cert
         self.__instances = set() 
         self.__ssl_cert_path = None
+        self.__policies = policies
         self.__connection_idle_timeout = connection_idle_timeout
  
     def protocol(self):
@@ -65,12 +64,6 @@ class Listener(object):
     def instances(self):
         return self.__instances
 
-    def app_cookie_name(self):
-        return self.__cookie_name
-
-    def lb_cookie_expiration(self):
-        return self.__cookie_expiration
-  
     def loadbalancer(self):
         return self.__loadbalancer
 
@@ -79,6 +72,9 @@ class Listener(object):
 
     def ssl_cert_path(self):
         return self.__ssl_cert_path
+ 
+    def policies(self):
+        return self.__policies
 
     def set_connection_idle_timeout(self, timeout):
         self.__connection_idle_timeout = timeout
@@ -99,9 +95,7 @@ class Listener(object):
             return False
         if self.__ssl_cert != other.__ssl_cert:
             return False
-        if self.__cookie_name != other.__cookie_name:
-            return False
-        if self.__cookie_expiration != other.__cookie_expiration:
+        if self.policies() != other.policies():
             return False
         if self.__connection_idle_timeout != other.__connection_idle_timeout:
             return False

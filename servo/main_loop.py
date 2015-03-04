@@ -28,7 +28,7 @@ import servo.health_check as health_check
 from servo.health_check import HealthCheckConfig, HealthCheckManager
 import servo.mon.listener as mon
 from servo.mon.stat import stat_instance
-
+from servo.lb_policy import LoadbalancerPolicy
 from collections import Iterable
 
 class ServoLoop(object):
@@ -114,9 +114,8 @@ class ServoLoop(object):
                                 instance_port=listener.instance_port
                                 instance_protocol=None # TODO: boto doesn't have the field
                                 ssl_cert=str(listener.ssl_certificate_id)
-                                cookie_expiration = ServoLoop.get_cookie_expiration(listener)
-                                cookie_name = ServoLoop.get_cookie_name(listener)
-                                l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name, cookie_name=cookie_name, cookie_expiration=cookie_expiration, connection_idle_timeout=conn_idle_timeout)
+                                policies = ServoLoop.get_policies(lb, listener.policy_names)
+                                l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name, policies=policies, connection_idle_timeout=conn_idle_timeout)
                                 for inst_id in in_service_instances:
                                     hostname = servo.hostname_cache.get_hostname(inst_id)
                                     if hostname is not None: l.add_instance(hostname) 
@@ -145,17 +144,19 @@ class ServoLoop(object):
         return self.__status
 
     @staticmethod
-    def get_cookie_expiration(listener):
-        expiration = None 
-        if listener.policy_names:
-            expiration = [policy.replace('LBCookieStickinessPolicyType:','') for policy in listener.policy_names if policy.find('LBCookieStickinessPolicyType:')>=0]  
-        if expiration:
-            return expiration[0]
+    def get_policies(loadbalancer, policy_names):
+        if not loadbalancer or not policy_names:
+            return []
+        policies = [] 
+        try:
+            for policy_desc in loadbalancer.policy_descriptions: 
+                if policy_desc.policy_name in policy_names:
+                    policy = LoadbalancerPolicy.from_policy_description(policy_desc)
+                    if policy:
+                        servo.log.debug('import policy: %s' % policy)
+                        policies.append(policy)
+        except Exception, err:
+            servo.log.error('failed to create policy objects: %s' % err)
+            servo.log.debug(traceback.format_exc())
+        return policies
 
-    @staticmethod
-    def get_cookie_name(listener):
-        cookie = None
-        if listener.policy_names:
-            cookie = [policy.replace('AppCookieStickinessPolicyType:','') for policy in listener.policy_names if policy.find('AppCookieStickinessPolicyType:')>=0]  
-        if cookie:
-            return cookie[0]

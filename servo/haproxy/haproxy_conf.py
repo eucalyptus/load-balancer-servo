@@ -20,6 +20,8 @@ import os
 import base64
 import servo
 import servo.config as config
+from servo.lb_policy import AppCookieStickinessPolicy, LBCookieStickinessPolicy, SSLNegotiationPolicy
+
 class ConfBuilder(object):
     def __init__(self, source):
         ## read the file contents
@@ -34,16 +36,16 @@ class ConfBuilder(object):
     def build(self, destination=None):
         raise NotImplementedException
 
-    def add(self, protocol, port, instances=[], cookie_name=None, cookie_expire=None, cert=None, comment=None, connection_idle_timeout=None):
+    def add(self, protocol, port, instances=[], policies=[], cert=None, comment=None, connection_idle_timeout=None):
         try:
-            self.add_protocol_port(protocol, port, cookie_name, cookie_expire, cert, comment, connection_idle_timeout = connection_idle_timeout )
+            self.add_protocol_port(protocol, port, policies, cert, comment, connection_idle_timeout = connection_idle_timeout )
             for instance in instances:
                 self.add_backend(port, instance)
         except Exception, err:
             servo.log.error('failed to add protocol-port: %s' % err)
         return self
 
-    def add_protocol_port(self, protocol, port, cookie_name=None, cookie_expire=None, cert=None, comment=None, connection_idle_timeout=None):
+    def add_protocol_port(self, protocol, port, policies, cert=None, comment=None, connection_idle_timeout=None):
         raise NotImplementedError
   
     def remove_protocol_port(self, port):
@@ -138,7 +140,7 @@ class ConfBuilderHaproxy(ConfBuilder):
                     break
         return backend_name
 
-    def add_protocol_port(self, protocol='tcp', port=80, cookie_name=None, cookie_expire=None, cert=None, comment=None, connection_idle_timeout=None):
+    def add_protocol_port(self, protocol='tcp', port=80, policies=[], cert=None, comment=None, connection_idle_timeout=None):
         '''
             add new protocol/port to the config file. if there's existing one, pass
         '''
@@ -167,7 +169,20 @@ class ConfBuilderHaproxy(ConfBuilder):
                 self.__content_map[section_name].append('reqadd X-Forwarded-Proto:\ %s' % protocol)
                 self.__content_map[section_name].append('reqadd X-Forwarded-Port:\ %s' % port)
             if protocol == 'https' or protocol == 'ssl':
-                self.__content_map[section_name].append('bind 0.0.0.0:%s ssl crt %s no-sslv3' % (port, cert))
+                # haproxy always disables sslv2
+                # sslv3 is always disabled due to POODLE vulnerability
+                sslv_setting = 'no-sslv3'
+                if ConfBuilderHaproxy.tls_v1(policies) == False:
+                    sslv_setting = '%s no-tlsv10' % sslv_setting
+                if ConfBuilderHaproxy.tls_v11(policies) == False:
+                    sslv_setting = '%s no-tlsv11' % sslv_setting
+                if ConfBuilderHaproxy.tls_v12(policies) == False:
+                    sslv_setting = '%s no-tlsv12' % sslv_setting
+                cipher_str = ConfBuilderHaproxy.cipher_string(policies)
+                if cipher_str:
+                    self.__content_map[section_name].append('bind 0.0.0.0:%s ssl crt %s %s ciphers %s' % (port, cert, sslv_setting, cipher_str))
+                else:
+                    self.__content_map[section_name].append('bind 0.0.0.0:%s ssl crt %s %s' % (port, cert, sslv_setting))
             else: 
                 self.__content_map[section_name].append('bind 0.0.0.0:%s' % port)
 
@@ -193,9 +208,10 @@ class ConfBuilderHaproxy(ConfBuilder):
 
             if connection_idle_timeout:
                 backend_attribute = '%s\n  timeout server %ss' % (backend_attribute, connection_idle_timeout)
-
-            if cookie_expire and cookie_name:
-                servo.log.error('both duration-based and app-controlled cookie stickiness are enabled. something is wrong!')
+ 
+            cookie_name = ConfBuilderHaproxy.get_app_cookie_name(policies)
+            cookie_expire = ConfBuilderHaproxy.get_lb_cookie_period(policies)
+            
             if ( protocol == 'http' or protocol == 'https' ) and cookie_expire:
                 try:
                     cookie_expire = int(cookie_expire)
@@ -212,7 +228,64 @@ class ConfBuilderHaproxy(ConfBuilder):
             pass # do nothing
 
         return self
-    
+
+    @staticmethod
+    def cipher_string(policies):
+        if not policies or len(policies) <= 0:
+            return None
+        for p in policies:
+            if type(p) is SSLNegotiationPolicy:
+                cipher_string = ":".join(p.ciphers()) 
+                return cipher_string
+        return None
+  
+    @staticmethod
+    def ssl_v2(policies):
+        return ConfBuilderHaproxy.check_ssl_ver(policies, 'ssl_v2')
+
+    @staticmethod
+    def ssl_v3(policies):
+        return ConfBuilderHaproxy.check_ssl_ver(policies, 'ssl_v3')
+                    
+    @staticmethod
+    def tls_v1(policies):
+        return ConfBuilderHaproxy.check_ssl_ver(policies, 'tls_v1')
+                    
+    @staticmethod
+    def tls_v11(policies):
+        return ConfBuilderHaproxy.check_ssl_ver(policies, 'tls_v11')
+
+    @staticmethod
+    def tls_v12(policies):
+        return ConfBuilderHaproxy.check_ssl_ver(policies, 'tls_v12')
+
+    @staticmethod
+    def check_ssl_ver(policies, func):
+        if not policies:
+             return None
+        for p in policies:
+            if type(p) is SSLNegotiationPolicy:
+                return getattr(p, func)()
+        return None
+
+    @staticmethod
+    def get_app_cookie_name(policies):
+        if not policies:
+             return None
+        for p in policies:
+            if type(p) is AppCookieStickinessPolicy:
+                return p.cookie_name()
+        return None
+
+    @staticmethod 
+    def get_lb_cookie_period(policies):
+        if not policies:
+             return None
+        for p in policies:
+            if type(p) is LBCookieStickinessPolicy:
+                return int(p.cookie_expiration_period())
+        return None
+
     def remove_protocol_port(self, port):
         '''
             remove existing port/protocol from the config if found

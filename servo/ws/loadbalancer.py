@@ -23,11 +23,12 @@
 from boto.ec2.elb.healthcheck import HealthCheck
 from boto.ec2.elb.listener import Listener
 from boto.ec2.elb.listelement import ListElement
-from boto.ec2.elb.policies import Policies, OtherPolicy
 from boto.ec2.elb.securitygroup import SecurityGroup
 from boto.ec2.instanceinfo import InstanceInfo
 from boto.resultset import ResultSet
 from servo.ws.attributes import LbAttributes
+from servo.ws.policies import PolicyDescription
+import servo
 
 class LoadBalancer(object):
     """
@@ -42,8 +43,7 @@ class LoadBalancer(object):
             ``(<Inbound port>, <Outbound port>, <Protocol>)``
         :ivar boto.ec2.elb.healthcheck.HealthCheck health_check: The health
             check policy for this load balancer.
-        :ivar boto.ec2.elb.policies.Policies policies: Cookie stickiness and
-            other policies.
+        :ivar list servo.ws.policies.PolicyDescription: A list of load balancer policies
         :ivar str name: The name of the Load Balancer.
         :ivar str dns_name: The external DNS name for the balancer.
         :ivar str created_time: A date+time string showing when the
@@ -72,7 +72,7 @@ class LoadBalancer(object):
         self.name = name
         self.listeners = None
         self.health_check = None
-        self.policies = None
+        self.policy_descriptions = None
         self.dns_name = None
         self.created_time = None
         self.instances = None
@@ -102,9 +102,9 @@ class LoadBalancer(object):
         elif name == 'Instances':
             self.instances = ResultSet([('member', InstanceInfo)])
             return self.instances
-        elif name == 'Policies':
-            self.policies = Policies(self)
-            return self.policies
+        elif name == 'PolicyDescriptions':
+            self.policy_descriptions = ResultSet([('member', PolicyDescription)])
+            return self.policy_descriptions
         elif name == 'SourceSecurityGroup':
             self.source_security_group = SecurityGroup()
             return self.source_security_group
