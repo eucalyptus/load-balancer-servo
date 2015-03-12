@@ -112,9 +112,10 @@ class ServoLoop(object):
                                 protocol=listener.protocol
                                 port=listener.load_balancer_port
                                 instance_port=listener.instance_port
-                                instance_protocol=None # TODO: boto doesn't have the field
+                                instance_protocol=listener.instance_protocol 
                                 ssl_cert=str(listener.ssl_certificate_id)
-                                policies = ServoLoop.get_policies(lb, listener.policy_names)
+                                policies = ServoLoop.get_listener_policies(lb, listener.policy_names)
+                                policies.extend(ServoLoop.get_backend_policies(lb, instance_port))
                                 l = Listener(protocol=protocol, port=port, instance_port=instance_port, instance_protocol=instance_protocol, ssl_cert=ssl_cert, loadbalancer=lb.name, policies=policies, connection_idle_timeout=conn_idle_timeout)
                                 for inst_id in in_service_instances:
                                     hostname = servo.hostname_cache.get_hostname(inst_id)
@@ -144,16 +145,39 @@ class ServoLoop(object):
         return self.__status
 
     @staticmethod
-    def get_policies(loadbalancer, policy_names):
-        if not loadbalancer or not policy_names:
+    def get_backend_policies(loadbalancer, instance_port):
+        if not loadbalancer or not loadbalancer.backends or not loadbalancer.policy_descriptions:
+            return []
+        policy_names = []
+        policies = []
+        try:
+            for backend in loadbalancer.backends:
+                if backend.instance_port == instance_port:
+                    for p in backend.policies:
+                        policy_names.append(p.policy_name)
+            for policy_desc in loadbalancer.policy_descriptions: 
+                if policy_desc.policy_name in policy_names or policy_desc.policy_type_name == 'PublicKeyPolicyType':
+                    policy = LoadbalancerPolicy.from_policy_description(policy_desc)
+                    if policy:
+                        policies.append(policy)
+        except Exception, err:
+            servo.log.error('failed to create backend policy objects: %s' % err)
+            servo.log.debug(traceback.format_exc())
+
+        return policies       
+
+    @staticmethod
+    def get_listener_policies(loadbalancer, listener_policy_names):
+        if not loadbalancer or not listener_policy_names:
             return []
         policies = [] 
         try:
             for policy_desc in loadbalancer.policy_descriptions: 
-                if policy_desc.policy_name in policy_names:
+                if policy_desc.policy_name in listener_policy_names:
                     policy = LoadbalancerPolicy.from_policy_description(policy_desc)
                     if policy:
                         policies.append(policy)
+                
         except Exception, err:
             servo.log.error('failed to create policy objects: %s' % err)
             servo.log.debug(traceback.format_exc())

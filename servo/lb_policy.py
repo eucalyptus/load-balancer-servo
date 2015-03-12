@@ -79,8 +79,39 @@ class LoadbalancerPolicy(object):
                     val = attr.attr_value
                     attr_dict[key] = val
                 return SSLNegotiationPolicy(policy_desc.policy_name, attr_dict)
+        elif policy_desc.policy_type_name == 'PublicKeyPolicyType':
+            if policy_desc.policy_name and policy_desc.policy_attr_descriptions:
+                for attr in policy_desc.policy_attr_descriptions:
+                    if attr.attr_name == 'PublicKey':
+                        return PublicKeyPolicy(policy_desc.policy_name, attr.attr_value)
+        elif policy_desc.policy_type_name == 'BackendServerAuthenticationPolicyType':
+            if policy_desc.policy_name and policy_desc.policy_attr_descriptions:
+                pk_policy_names = []
+                for attr in policy_desc.policy_attr_descriptions:
+                    if attr.attr_name == 'PublicKeyPolicyName':
+                        pk_policy_names.append(attr.attr_value)
+                return BackendServerAuthenticationPolicy(policy_desc.policy_name, pk_policy_names) 
         return None
 
+class PublicKeyPolicy(LoadbalancerPolicy):
+    def __init__(self, policy_name, public_key):
+        LoadbalancerPolicy.__init__(self, 'PublicKeyPolicyType', policy_name, {'PublicKey':public_key})
+
+    def public_key(self):
+        if self.attributes().has_key('PublicKey'):
+            return self.attributes()['PublicKey']
+        else:
+            return None
+
+class BackendServerAuthenticationPolicy(LoadbalancerPolicy):
+    def __init__(self, policy_name, pk_policy_names = []):
+        LoadbalancerPolicy.__init__(self, 'BackendServerAuthenticationPolicyType', policy_name, {'PublicKeyPolicyName':pk_policy_names})
+
+    def public_key_policy_names(self):
+        if self.attributes().has_key('PublicKeyPolicyName'):
+            return self.attributes()['PublicKeyPolicyName']
+        else:
+            return [] 
 
 class AppCookieStickinessPolicy(LoadbalancerPolicy):
     def __init__(self, policy_name, cookie_name):

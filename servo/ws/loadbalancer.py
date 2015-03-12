@@ -25,6 +25,7 @@ from boto.ec2.elb.listener import Listener
 from boto.ec2.elb.listelement import ListElement
 from boto.ec2.elb.securitygroup import SecurityGroup
 from boto.ec2.instanceinfo import InstanceInfo
+from boto.ec2.elb.loadbalancer import Backend
 from boto.resultset import ResultSet
 from servo.ws.attributes import LbAttributes
 from servo.ws.policies import PolicyDescription

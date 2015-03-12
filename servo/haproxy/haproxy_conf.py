@@ -20,7 +20,7 @@ import os
 import base64
 import servo
 import servo.config as config
-from servo.lb_policy import AppCookieStickinessPolicy, LBCookieStickinessPolicy, SSLNegotiationPolicy
+from servo.lb_policy import AppCookieStickinessPolicy, LBCookieStickinessPolicy, SSLNegotiationPolicy, PublicKeyPolicy, BackendServerAuthenticationPolicy
 
 class ConfBuilder(object):
     def __init__(self, source):
@@ -40,7 +40,7 @@ class ConfBuilder(object):
         try:
             self.add_protocol_port(protocol, port, policies, cert, comment, connection_idle_timeout = connection_idle_timeout )
             for instance in instances:
-                self.add_backend(port, instance)
+                self.add_backend(port, instance, policies)
         except Exception, err:
             servo.log.error('failed to add protocol-port: %s' % err)
         return self
@@ -51,10 +51,7 @@ class ConfBuilder(object):
     def remove_protocol_port(self, port):
         raise NotImplementedError
 
-    def add_backend(self, port, instance):
-        raise NotImplementedError
-
-    def remove_backend(self, port, instance):
+    def add_backend(self, port, instance, policies):
         raise NotImplementedError
 
     def verify(self, listeners):
@@ -230,6 +227,21 @@ class ConfBuilderHaproxy(ConfBuilder):
         return self
 
     @staticmethod
+    def backend_server_pubkeys(policies):
+        pubkey_map = {}
+        pubkeys_mapped = []
+        for p in policies:
+            if type(p) is PublicKeyPolicy:
+                pubkey_map[p.policy_name()] = p.public_key()
+
+        for p in policies:
+            if type(p) is BackendServerAuthenticationPolicy:
+                for pub_key_policy in p.public_key_policy_names():
+                    if pubkey_map.has_key(pub_key_policy):
+                        pubkeys_mapped.append(pubkey_map[pub_key_policy])
+
+        return pubkeys_mapped
+    @staticmethod
     def cipher_string(policies):
         if not policies or len(policies) <= 0:
             return None
@@ -307,7 +319,7 @@ class ConfBuilderHaproxy(ConfBuilder):
         return self
 
     #instance = {hostname , port, protocol=None )
-    def add_backend(self, port, instance):
+    def add_backend(self, port, instance, policies):
         (section_name, section) = self.find_frontend(port)
         if section_name is None:
             return self
@@ -331,26 +343,35 @@ class ConfBuilderHaproxy(ConfBuilder):
         line = 'server %s %s:%d' % (section_name.replace('frontend','').strip(' '), instance['hostname'], instance['port'])
         if lbcookie_enabled or appcookie_enabled:
             line = line + ' cookie %s' % ConfBuilderHaproxy.encode_str(instance['hostname'])
-       
+     
+        #backend authentication is requested 
+        if instance['protocol'] == 'https' or instance['protocol'] == 'ssl':
+            pubkeys = ConfBuilderHaproxy.backend_server_pubkeys(policies) 
+            if pubkeys and len(pubkeys) > 0:
+                ca_file = ConfBuilderHaproxy.create_backend_ca_file("ca-frontend-%d" % port, pubkeys)
+                line = line + ' ssl verify required ca-file %s' % ca_file
+            else:
+                line = line + ' ssl verify none'
+
         backend_conf.insert(0, line)
         return self
 
     @staticmethod
+    def create_backend_ca_file(file_name, pubkeys):
+        pubkey_dir = "%s/backend_auth" % config.RUN_ROOT
+        if not os.path.exists(pubkey_dir):
+            os.makedirs(pubkey_dir)
+        file_path = "%s/%s" % (pubkey_dir, file_name)
+        if os.path.exists(file_path):
+            os.unlink(file_path)
+
+        f_key = open(file_path, 'w')
+        for p in pubkeys:
+            f_key.write(p)
+            f_key.write('\n')
+        f_key.close()
+        return file_path
+    
+    @staticmethod
     def encode_str(server):
         return base64.b64encode(server) 
-
-    def remove_backend(self, port, instance):
-        section_name, section = self.find_frontend(port)
-        if section_name is None:
-            return self
-        
-        backend_name = self.find_backend_name(section)
-        if backend_name is None:
-            return self
-
-        backend = 'backend %s' % backend_name 
-        if backend in self.__content_map.iterkeys():
-            backend_conf = self.__content_map.pop(backend)  
-            line = 'server %s %s:%d' % (section_name.replace('frontend','').strip(' '), instance['hostname'], instance['port'])
-            backend_conf.remove(line)
-        return self
