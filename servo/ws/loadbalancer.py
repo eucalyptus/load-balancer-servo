@@ -24,11 +24,11 @@ from boto.ec2.elb.healthcheck import HealthCheck
 from boto.ec2.elb.listener import Listener
 from boto.ec2.elb.listelement import ListElement
 from boto.ec2.elb.securitygroup import SecurityGroup
-from boto.ec2.instanceinfo import InstanceInfo
 from boto.ec2.elb.loadbalancer import Backend
 from boto.resultset import ResultSet
 from servo.ws.attributes import LbAttributes
 from servo.ws.policies import PolicyDescription
+from servo.ws.backend_instance import BackendInstance
 import servo
 
 class LoadBalancer(object):
@@ -49,7 +49,7 @@ class LoadBalancer(object):
         :ivar str dns_name: The external DNS name for the balancer.
         :ivar str created_time: A date+time string showing when the
             load balancer was created.
-        :ivar list instances: A list of :py:class:`boto.ec2.instanceinfo.InstanceInfo`
+        :ivar list instances: A list of :py:class:`servo.ws.backend_instance.BackendInstance`
             instances, representing the EC2 instances this load balancer is
             distributing requests to.
         :ivar list availability_zones: The availability zones this balancer
@@ -100,8 +100,8 @@ class LoadBalancer(object):
             return self.listeners
         elif name == 'AvailabilityZones':
             return self.availability_zones
-        elif name == 'Instances':
-            self.instances = ResultSet([('member', InstanceInfo)])
+        elif name == 'BackendInstances':
+            self.instances = ResultSet([('member', BackendInstance)])
             return self.instances
         elif name == 'PolicyDescriptions':
             self.policy_descriptions = ResultSet([('member', PolicyDescription)])

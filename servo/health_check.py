@@ -68,23 +68,24 @@ class HealthCheckManager(object):
     def set_instances(self, instances):
         if health_check_config is None:
             return
+        instance_ids = [inst.instance_id for inst in instances]
         new_instances=[]
-        for instance_id in instances:
-            if not self.__check_map.has_key(instance_id):
-                new_instances.append(instance_id)
-        del_instances=[]
+        instance_id_delete=[]
+        for instance in instances:
+            if not self.__check_map.has_key(instance.instance_id):
+                new_instances.append(instance)
         for instance_id in self.__check_map.keys():
-            if not instance_id in instances:
-                del_instances.append(instance_id)
-        for instance_id in new_instances:
-            self.register_instance(instance_id)
-        for instance_id in del_instances:
+            if not instance_id in instance_ids:
+                instance_id_delete.append(instance_id)
+        for instance in new_instances:
+            self.register_instance(instance.instance_id, report_elb=instance.report_health_check)
+        for instance_id in instance_id_delete:
             self.deregister_instance(instance_id)
         
-    def register_instance(self, instance_id):
+    def register_instance(self, instance_id, report_elb=True):
         if not self.__check_map.has_key(instance_id):
-            self.__check_map[instance_id] = InstanceHealthChecker(instance_id)
-            servo.log.info('starting to check %s' % instance_id)
+            self.__check_map[instance_id] = InstanceHealthChecker(instance_id, report_elb)
+            servo.log.info('starting to check %s (reporting health status to elb: %s)' % (instance_id, report_elb))
             self.__check_map[instance_id].start()
  
     def has_instance(self, instance_id):
@@ -109,10 +110,11 @@ class HealthCheckManager(object):
             servo.log.info('stop checking %s' % instance_id)
 
 class InstanceHealthChecker(threading.Thread):
-    def __init__(self, instance_id):
+    def __init__(self, instance_id, report_elb=True):
         self.instance_id = instance_id
         self.running = True
         self.inst_status = 'OutOfService'
+        self.report_elb = report_elb
         threading.Thread.__init__(self)
 
     def health_status(self):
@@ -160,12 +162,14 @@ class InstanceHealthChecker(threading.Thread):
                     healthy_count = 0
                     instance = StatefulInstance(self.instance_id, 'InService')
                     self.inst_status = 'InService'
-                    servo.log.debug('Reported %s InService' % self.instance_id)
-                    try:
-                        con = servo.ws.connect_elb(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
-                        con.put_instance_health(servo_instance_id, [instance])
-                    except Exception, err:
-                        servo.log.error('failed to post servo states: %s' % err)
+                    servo.log.debug('%s: InService' % self.instance_id)
+                    if self.report_elb:
+                        try:
+                            con = servo.ws.connect_elb(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
+                            con.put_instance_health(servo_instance_id, [instance])
+                            servo.log.debug('%s: InService status reported' % self.instance_id)
+                        except Exception, err:
+                            servo.log.error('failed to post servo states: %s' % err)
             else:
                 unhealthy_count += 1
                 healthy_count = 0
@@ -174,12 +178,14 @@ class InstanceHealthChecker(threading.Thread):
                     unhealthy_count = 0
                     instance = StatefulInstance(self.instance_id, 'OutOfService')
                     self.inst_status = 'OutOfService'
-                    servo.log.debug('Reported %s OutOfService' % self.instance_id)
-                    try:
-                        con = servo.ws.connect_elb(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
-                        con.put_instance_health(servo_instance_id, [instance])
-                    except Exception, err:
-                        servo.log.error('failed to post servo states: %s' % err)
+                    servo.log.debug('%s: OutOfService' % self.instance_id)
+                    if self.report_elb:
+                        try:
+                            con = servo.ws.connect_elb(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token)
+                            con.put_instance_health(servo_instance_id, [instance])
+                            servo.log.debug('%s: OutOfService status reported' % self.instance_id)
+                        except Exception, err:
+                            servo.log.error('failed to post servo states: %s' % err)
 
             if healthy_count > health_check_config.healthy_threshold:
                 healthy_count = 0

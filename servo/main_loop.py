@@ -64,6 +64,7 @@ class ServoLoop(object):
                 lbs = con.get_servo_load_balancers(self.__instance_id)
             except Exception, err:
                 servo.log.error('failed to query the elb service: %s' % err)
+                servo.log.debug(traceback.format_exc())
             if lbs is None:
                 servo.log.warning('failed to find the loadbalancers')
             else:
@@ -98,12 +99,12 @@ class ServoLoop(object):
                                     hc_mgr.reset()
                         instances = []
                         if lb.instances is not None and isinstance(lb.instances, Iterable):
-                            for inst in lb.instances:
-                                instances.append(str(inst.id))
+                            instances.extend(lb.instances)
+                        instance_ids = [inst.instance_id for inst in instances]
                         
                         hc_mgr.set_instances(instances)
                         in_service_instances = []
-                        for inst_id in instances:                  
+                        for inst_id in instance_ids:                  
                             if hc_mgr.health_status(inst_id) is 'InService':
                                 in_service_instances.append(inst_id)
 
@@ -129,8 +130,6 @@ class ServoLoop(object):
                 except Exception, err:
                     servo.log.error('failed to update proxy listeners: %s' % err) 
         
-          # (future) put health check results to the elb service
-          # (future) put cloudwatch metrics to the elb service
             query_period_delay = config.QUERY_PERIOD_SEC
             while query_period_delay > 0 and self.__status == ServoLoop.RUNNING:
                 time.sleep(1)

@@ -191,14 +191,9 @@ class EucaELBConnection(ELBConnection):
         lbs = self.get_list('DescribeLoadBalancersByServo', params,
                              [('member', LoadBalancer)])
         for lb in lbs:
-            instances = []
             if lb.instances is not None and isinstance(lb.instances, Iterable):
                 for inst in lb.instances:
-                    inst_id=str(inst.id) 
-                    if inst_id.find(':')>=0:
-                        token = inst_id.split(':')
-                        inst_id=token[0]
-                        ipaddr=token[1]
-                        hostname_cache.register(inst_id, ipaddr)
-                        inst.id = inst_id
+                    inst_id=inst.instance_id
+                    ipaddr=inst.instance_ip_address
+                    hostname_cache.register(inst_id, ipaddr)
         return lbs
