@@ -35,13 +35,14 @@ PROCESS=/usr/bin/load-balancer-servo
 PIDFILE=/var/run/load-balancer-servo/servo.pid
 BOTO_CONFIG=/etc/load-balancer-servo/boto.cfg
 SERVOUSER=servo
-LOGLEVEL=info
+LOGLEVEL=debug
+BOTO_LOGLEVEL=info
 
 LOCKFILE=/var/lock/subsys/load-balancer-servo
 
 start() {
     echo -n $"Starting $SERVICE: "
-    daemon --user=$SERVOUSER --pidfile=$PIDFILE $PROCESS -d -p $PIDFILE -l $LOGLEVEL -b $BOTO_CONFIG
+    daemon --user=$SERVOUSER --pidfile=$PIDFILE $PROCESS -d -p $PIDFILE -l $LOGLEVEL -c $BOTO_CONFIG -b $BOTO_LOGLEVEL
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch $LOCKFILE

@@ -96,7 +96,7 @@ if __name__ == "__main__":
             "--log-level",
             "--boto-config",
         ]
-        opts, _ = getopt.getopt(sys.argv[1:], "hdp:l:b:", longopts)
+        opts, _ = getopt.getopt(sys.argv[1:], "hdp:l:b:c:", longopts)
         for arg, value in opts:
             if arg == "-d" or arg == "--daemonize":
                 daemon = True
@@ -104,7 +104,9 @@ if __name__ == "__main__":
                 servo.set_pidfile(value)
             elif arg == "-l" or arg == "--log-level":
                 servo.set_loglevel(value)
-            elif arg == "-b" or arg == "--boto-config":
+            elif arg == "-b" or arg == "--boto-log-level":
+                servo.set_boto_loglevel(value)
+            elif arg == "-c" or arg == "--boto-config":
                 servo.set_boto_config(value)
             elif arg == "-h" or arg == "--help":
                 usage()

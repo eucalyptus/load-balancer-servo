@@ -42,6 +42,14 @@ botolog.addHandler(LOG_HANDLER)
 # If you want more information (like DEBUG) you will have to set the log level
 def set_loglevel(lvl):
     global log
+    log.setLevel(get_log_level_as_num(lvl))
+
+
+def set_boto_loglevel(lvl):
+    botolog.setLevel(get_log_level_as_num(lvl))
+
+
+def get_log_level_as_num(lvl):
     lvl_num = None
     if isinstance(lvl, str):
         try:
@@ -51,6 +59,4 @@ def set_loglevel(lvl):
             return
     else:
         lvl_num = lvl
-
-    log.setLevel(lvl_num)
-    botolog.setLevel(lvl_num)
+    return lvl_num
