@@ -64,7 +64,6 @@ class ServoLoop(object):
                 lbs = con.get_servo_load_balancers(self.__instance_id)
             except Exception, err:
                 servo.log.error('failed to query the elb service: %s' % err)
-                servo.log.debug(traceback.format_exc())
             if lbs is None:
                 servo.log.warning('failed to find the loadbalancers')
             else:
