@@ -19,17 +19,23 @@
 import socket
 import sys
 import os
+import traceback
 import servo
 import servo.config as config
-from log import HttpLog
-from log import TcpLog
+from log import HttpAccessLog
+from log import TcpAccessLog
 import threading
 
 class LogListener(threading.Thread):
     def __init__(self, stat):
         self.running = True
         self.stat = stat
+        self.loadbalancer = None
+        self.access_logger = None
         threading.Thread.__init__(self)
+
+    def set_loadbalancer(self, loadbalancer):
+        self.loadbalancer = loadbalancer
 
     def run(self):
         self.running = True
@@ -49,7 +55,10 @@ class LogListener(threading.Thread):
                 log = self.parse(data)
                 if log is not None:
                     self.stat.received(log)
+                    if self.access_logger and self.access_logger.enabled:
+                        self.access_logger.add_log(log.access_log())
             except Exception, err:
+                servo.log.debug(traceback.format_exc())
                 pass
 
     def parse(self, line):
@@ -61,9 +70,9 @@ class LogListener(threading.Thread):
         line = line.strip()
 
         if line.startswith('httplog'):
-            return HttpLog.parse(line)
+            return HttpAccessLog.parse(line, self.loadbalancer)
         elif line.startswith('tcplog'):
-            return TcpLog.parse(line)
+            return TcpAccessLog.parse(line, self.loadbalancer)
  
     def stop(self):
         try:

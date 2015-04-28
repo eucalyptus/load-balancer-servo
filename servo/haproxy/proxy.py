@@ -134,7 +134,7 @@ class ProxyCreate(ProxyAction):
         
         #def add(self, protocol, port, instances=[]):
         #instance = {hostname , port, protocol=None )
-        builder = ConfBuilderHaproxy(CONF_FILE) 
+        builder = ConfBuilderHaproxy(CONF_FILE, self.__listener.loadbalancer()) 
         instances = []
 
         for host in self.__listener.instances():

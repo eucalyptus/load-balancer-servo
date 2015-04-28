@@ -21,10 +21,12 @@ import base64
 import servo
 import servo.config as config
 from servo.lb_policy import AppCookieStickinessPolicy, LBCookieStickinessPolicy, SSLNegotiationPolicy, PublicKeyPolicy, BackendServerAuthenticationPolicy
+from servo.mon.log import HttpAccessLog, TcpAccessLog
 
 class ConfBuilder(object):
-    def __init__(self, source):
+    def __init__(self, source, loadbalancer=None):
         ## read the file contents
+        self.loadbalancer = loadbalancer
         self.contents = []
         try:
             f=open(source, "r")
@@ -59,8 +61,8 @@ class ConfBuilder(object):
 
 section_name_prefix = ['global','listen','defaults','frontend','backend']
 class ConfBuilderHaproxy(ConfBuilder):
-    def __init__(self, source):
-        ConfBuilder.__init__(self, source)
+    def __init__(self, source, loadbalancer=None):
+        ConfBuilder.__init__(self, source, loadbalancer)
         self.__content_map = {} # key=section name(e.g, frontend), value: lines in the section
         cur_key=None
         for line in self.contents:
@@ -189,9 +191,9 @@ class ConfBuilderHaproxy(ConfBuilder):
             if config.ENABLE_CLOUD_WATCH:  # this may have significant performance impact
                 self.__content_map[section_name].append('log %s local2 info' % config.CW_LISTENER_DOM_SOCKET)
                 if protocol == 'http' or protocol == 'https':
-                    self.__content_map[section_name].append('log-format httplog\ %f\ %b\ %s\ %ST\ %ts\ %Tq\ %Tw\ %Tc\ %Tr\ %Tt') 
+                    self.__content_map[section_name].append('log-format %s' % HttpAccessLog.log_format())
                 elif protocol == 'tcp' or protocol == 'ssl':
-                    self.__content_map[section_name].append('log-format tcplog\ %f\ %b\ %s\ %ts\ %Tw\ %Tc\ %Tt') 
+                    self.__content_map[section_name].append('log-format %s' % TcpAccessLog.log_format())
 
             def_backend = 'backend-%s-%s' % (protocol, port)
             self.__content_map[section_name].append('default_backend %s' % def_backend)

@@ -41,7 +41,6 @@ pidroot = DEFAULT_PID_ROOT
 boto_config = None
 cred_provider = None
 
-
 def get_provider():
     global boto_config
     global cred_provider
@@ -122,6 +121,12 @@ def get_elb_service_url():
 
 def get_euare_service_url():
     return get_value('euare_service_url')
+
+def get_objectstorage_service_host():
+    return get_value('objectstorage_service_url')
+
+def get_owner_account_id():
+    return get_value('loadbalancer_owner_account')
 
 def get_ntp_server_url():
     return get_value('ntp_server')

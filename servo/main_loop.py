@@ -19,6 +19,7 @@
 import time
 import config
 import os
+import traceback
 import servo
 import servo.ws
 from servo.haproxy import ProxyManager
@@ -28,6 +29,7 @@ import servo.health_check as health_check
 from servo.health_check import HealthCheckConfig, HealthCheckManager
 import servo.mon.listener as mon
 from servo.mon.stat import stat_instance
+from servo.mon.access_logger import AccessLogger
 from servo.lb_policy import LoadbalancerPolicy
 from collections import Iterable
 
@@ -47,9 +49,14 @@ class ServoLoop(object):
         servo.log.debug('main loop running with elb_host=%s, instance_id=%s' % (self.__elb_host, self.__instance_id))
 
     def start(self):
+        log_listener = None
+        access_logger = AccessLogger()
+        access_logger.start()
         if config.ENABLE_CLOUD_WATCH:
-            hl = mon.LogListener(stat_instance)
-            hl.start()
+            log_listener = mon.LogListener(stat_instance)
+            log_listener.access_logger = access_logger
+            log_listener.start()
+ 
         self.__status = ServoLoop.RUNNING 
         proxy_mgr = ProxyManager()
         hc_mgr = HealthCheckManager()
@@ -74,12 +81,29 @@ class ServoLoop(object):
                     conn_idle_timeout = config.CONNECTION_IDLE_TIMEOUT
                     for lb in lbs:
                         try:
+                            if log_listener: # assume there is only one loadbalancer per servo
+                                log_listener.set_loadbalancer(lb.name)
                             attr = lb.attributes
                             conn_idle_timeout = attr.connecting_settings.idle_timeout
                             if int(conn_idle_timeout) < 1:
                                 conn_idle_timeout = 1
                             elif int(conn_idle_timeout) > 3600:
                                 conn_idle_timeout = 3600
+                            access_log_setting = attr.access_log
+                            access_logger.loadbalancer = lb.name
+                            if access_log_setting.s3_bucket_name != None:
+                                access_logger.bucket_name = access_log_setting.s3_bucket_name
+                                servo.log.debug('access log bucket name: %s' % access_logger.bucket_name)
+                            if access_log_setting.s3_bucket_prefix != None:
+                                access_logger.bucket_prefix = access_log_setting.s3_bucket_prefix
+                                servo.log.debug('access log bucket prefix: %s' % access_logger.bucket_prefix)
+                            if access_log_setting.emit_interval != None:
+                                access_logger.emit_interval = int(access_log_setting.emit_interval)
+                                servo.log.debug('access log emit interval: %d' % access_logger.emit_interval)
+                            if access_log_setting.enabled != None:
+                                access_logger.enabled = access_log_setting.enabled
+                                servo.log.debug('access log enabled?: %s' % access_logger.enabled)
+ 
                         except Exception, err:
                             servo.log.warning('failed to get connection idle timeout: %s' % str(err))
                         if lb.health_check is not None:
