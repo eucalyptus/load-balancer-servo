@@ -43,6 +43,6 @@ setup (name="Eucalyptus Loadbalancer Servo",
     scripts = ['load-balancer-servo'],
     data_files = [('/etc/load-balancer-servo/',
         ['scripts/haproxy_template.conf',
-         'scripts/boto.cfg'])],
+         'scripts/boto.cfg', 'scripts/503.http'])],
 )
 
