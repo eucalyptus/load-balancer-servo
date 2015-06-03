@@ -27,6 +27,7 @@ from servo.cw_loop import CWLoop
 import subprocess
 import os
 import time
+import shlex
 
 __version__ = '1.0.0-dev'
 Version = __version__
@@ -40,10 +41,36 @@ def spin_locks():
     except Exception, err:
         log.error('failed to spin on locks: %s' % err)
 
+
+def run_as_sudo(cmd):
+    return run('sudo %s' % cmd)
+
+
+def run_as_sudo_with_grep(cmd, grep):
+    return run_with_grep('sudo %s' % cmd, grep)
+
+
+def run(cmd):
+    p = subprocess.Popen(shlex.split(cmd), stderr=subprocess.PIPE)
+    output = p.communicate()
+    if p.returncode != 0:
+        log.debug(output)
+    return p.returncode
+
+
+def run_with_grep(cmd, grep):
+    proc1 = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE)
+    proc2 = subprocess.Popen(shlex.split('grep %s' % grep), stdin=proc1.stdout, stderr=subprocess.PIPE)
+    proc1.stdout.close()
+    output = proc2.communicate()
+    if proc2.returncode != 0:
+        log.debug(output)
+    return proc2.returncode
+
+
 def start_servo():
     spin_locks()
-    cmd_line = 'sudo modprobe floppy > /dev/null'
-    if subprocess.call(cmd_line, shell=True) != 0:
+    if run_as_sudo('modprobe floppy') != 0:
         log.error('failed to load floppy driver')
     CWLoop().start()
     ServoLoop().start()
