@@ -58,7 +58,7 @@ class ProxyManager(object):
         for add in to_add:
             proxy_actions.append(ProxyCreate(add))
         try:
-            ok = ProxyActionTransaction.instance(proxy_actions).run() 
+            ok = ProxyActionTransaction.instance(proxy_actions, self.__listeners).run() 
         except Exception, error:
             servo.log.error('failed to update the listeners (%s)' % error)
             return self.__listeners
