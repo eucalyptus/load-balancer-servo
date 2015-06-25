@@ -43,20 +43,21 @@ class ProxyError(Exception):
     pass
 
 class ProxyActionTransaction(object):
-    def __init__(self, actions=[]):
+    def __init__(self, actions=[], listeners=[]):
         self._actions = actions
+        self._listeners = listeners
 
     @staticmethod
-    def instance(actions=[]):
-        return ProxyActionDefaultTransaction(actions)
+    def instance(actions=[], listeners=[]):
+        return ProxyActionDefaultTransaction(actions, listeners)
 
     # queue and run periodcally? or run immediately?
     def run(self):
         raise NotImplementedError 
 
 class ProxyActionDefaultTransaction(ProxyActionTransaction):
-     def __init__(self, actions):
-         ProxyActionTransaction.__init__(self, actions)
+     def __init__(self, actions, listeners=[]):
+         ProxyActionTransaction.__init__(self, actions, listeners)
          
      def run(self):
          if not os.path.exists(CONF_FILE):
@@ -98,6 +99,11 @@ class ProxyActionDefaultTransaction(ProxyActionTransaction):
                      proc.terminate()
              except:
                  pass
+
+             for action in self._actions:
+                 if isinstance(action, ProxyRemove) and self._listeners and len(self._listeners) <= 1:
+                     return True # the last listener was removed and haproxy process was killed
+ 
              traceback.print_exc(file=sys.stdout)
              servo.log.error('failed to run haproxy process: %s' % err)
              servo.log.debug('old haproxy config is in %s' % conf_backup)
