@@ -224,16 +224,6 @@ class ProxyRemove(ProxyAction):
             servo.log.error("failed to remove the port from the haproxy config: %s" % err)
             self.__status =ProxyAction.STATUS_ERROR
             return
-        try:
-            if (self.__listener.protocol() == 'https' or self.__listener.protocol() == 'ssl') and self.__listener.ssl_cert_arn() != None:
-                arn = self.__listener.ssl_cert_arn()
-                cert_name = arn.rpartition('/')[2]
-                cert_dir = "%s/%s" % (config.RUN_ROOT, cert_name)
-                if os.path.exists(cert_dir):
-                    shutil.rmtree(cert_dir)
-        except Exception, err:
-            servo.log.error("failed to delete server certificates: %s" % err)
-      
         self.__status = ProxyAction.STATUS_DONE
 
     def __repr__(self):
