@@ -20,8 +20,7 @@ import threading
 import time
 import datetime
 import httplib2
-import socket
-import ssl
+import socket, ssl
 import servo.ws
 import servo.config as config
 import servo.hostname_cache as hostname_cache
@@ -242,14 +241,14 @@ class InstanceHealthChecker(threading.Thread):
         path = target[idx:]
         url = "https://%s:%d%s" % (self.ip_addr, int(port), path)
         try:
-            resp, content = httplib2.Https(timeout=health_check_config.timeout).request(url)
+            resp, content = httplib2.Http(timeout=health_check_config.timeout, disable_ssl_certificate_validation=True).request(url)
             if resp['status'] != '200':
                 return False
             return True
         except socket.timeout: # probably timeout error
             return False
         except Exception, err:
-            #servo.log.warn('unknown socket error to %s-%s' % (url, err)
+            #servo.log.warn('unknown socket error to %s-%s' % (url, err))
             return False
         return True
  
@@ -266,7 +265,7 @@ class InstanceHealthChecker(threading.Thread):
             ssl_sock.connect((self.ip_addr, int(port)))
             return True
         except Exception, err:
-        #    servo.log.warn('ssl failed: (%s:%d) - %s' % (self.ip_addr, int(port), err))
+            #servo.log.warn('ssl failed: (%s:%d) - %s' % (self.ip_addr, int(port), err))
             return False
         finally:
             if ssl_sock is not None:

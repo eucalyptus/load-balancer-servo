@@ -7,7 +7,7 @@ from boto.iam.connection import IAMConnection
 from servo.ws.loadbalancer import LoadBalancer
 import servo.config as config
 import servo.hostname_cache as hostname_cache
-from servo.ssl.server_cert import ServerCertificate
+from servo.security.server_cert import ServerCertificate
 import time
 import M2Crypto
 from collections import Iterable

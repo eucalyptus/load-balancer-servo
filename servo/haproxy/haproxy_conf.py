@@ -169,10 +169,11 @@ class ConfBuilderHaproxy(ConfBuilder):
                 self.__content_map[section_name].append('reqadd X-Forwarded-Port:\ %s' % port)
             if protocol == 'https' or protocol == 'ssl':
                 # haproxy always disables sslv2
-                # sslv3 is always disabled due to POODLE vulnerability
-                sslv_setting = 'no-sslv3'
+                sslv_setting = ''
+                if ConfBuilderHaproxy.ssl_v3(policies) == False:
+                    sslv_setting = '%s no-sslv3' % sslv_setting
                 if ConfBuilderHaproxy.tls_v1(policies) == False:
-                    sslv_setting = '%s no-tlsv10' % sslv_setting
+                    sslv_setting = '%s no-tlsv10' % sslv_setting 
                 if ConfBuilderHaproxy.tls_v11(policies) == False:
                     sslv_setting = '%s no-tlsv11' % sslv_setting
                 if ConfBuilderHaproxy.tls_v12(policies) == False:
