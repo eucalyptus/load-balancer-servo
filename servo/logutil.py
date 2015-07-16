@@ -27,9 +27,8 @@ LOG_FILE = '/var/log/load-balancer-servo/servo.log'
 LOG_BYTES = 1024 * 1024 # 1MB
 LOG_FORMAT = "%(asctime)s %(name)s [%(levelname)s]:%(message)s"
 LOG_HANDLER = RotatingFileHandler(LOG_FILE, maxBytes=LOG_BYTES, backupCount=5)
+LOG_HANDLER.setFormatter(logging.Formatter(LOG_FORMAT))
 
-
-logging.basicConfig(filename=LOG_FILE, format=LOG_FORMAT)
 log = logging.getLogger('servo')
 botolog = logging.getLogger('boto')
 log.setLevel(logging.INFO)
