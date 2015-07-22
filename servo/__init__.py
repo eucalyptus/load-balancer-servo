@@ -1,4 +1,4 @@
-# Copyright 2009-2013 Eucalyptus Systems, Inc.
+# Copyright 2009-2015 Eucalyptus Systems, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import subprocess
 import os
 import time
 
-__version__ = '1.0.0-dev'
+__version__ = '1.1.1'
 Version = __version__
 
 def spin_locks():
