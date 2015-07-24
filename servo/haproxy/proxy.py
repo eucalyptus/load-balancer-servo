@@ -99,10 +99,14 @@ class ProxyActionDefaultTransaction(ProxyActionTransaction):
                      proc.terminate()
              except:
                  pass
-
+             num_listeners = len(self._listeners)
              for action in self._actions:
-                 if isinstance(action, ProxyRemove) and self._listeners and len(self._listeners) <= 1:
-                     return True # the last listener was removed and haproxy process was killed
+                 if isinstance(action, ProxyRemove): 
+                     num_listeners-=1
+                 elif isinstance(action, ProxyCreate):
+                     num_listeners+=1
+             if num_listeners <= 0:
+                 return True # haproxy would fail when there is no remaining listeners
  
              traceback.print_exc(file=sys.stdout)
              servo.log.error('failed to run haproxy process: %s' % err)
