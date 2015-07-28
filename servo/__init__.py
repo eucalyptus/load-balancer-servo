@@ -28,7 +28,7 @@ import subprocess
 import os
 import time
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 Version = __version__
 
 def spin_locks():
