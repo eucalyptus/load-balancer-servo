@@ -5,6 +5,7 @@ from boto.ec2.regioninfo import RegionInfo
 from boto.ec2.cloudwatch import CloudWatchConnection
 from boto.iam.connection import IAMConnection
 from servo.ws.loadbalancer import LoadBalancer
+from servo.ws.put_servo_states_response import PutServoStatesResponseType
 import servo.config as config
 import servo.hostname_cache as hostname_cache
 from servo.security.server_cert import ServerCertificate
@@ -173,8 +174,13 @@ class EucaELBConnection(ELBConnection):
         value = [metric.Latency, metric.RequestCount, metric.HTTPCode_ELB_4XX, metric.HTTPCode_ELB_5XX, metric.HTTPCode_Backend_2XX, metric.HTTPCode_Backend_3XX, metric.HTTPCode_Backend_4XX, metric.HTTPCode_Backend_5XX]
         unit = ['Milliseconds','Count','Count','Count','Count','Count','Count','Count']
         self.cw_con.build_put_params(params, name, value=value,timestamp=None, unit=unit, dimensions=None, statistics=None)
-
-        return self.get_status('PutServoStates', params)
+        response = self.get_object('PutServoStates', params, PutServoStatesResponseType)
+        try:
+            config.set_query_period(response.servo_response_metadata.get_lb_interval)
+            config.set_cwatch_report_period(response.servo_response_metadata.put_metric_interval)
+            config.set_backend_instance_health_period(response.servo_response_metadata.put_instance_health_interval)
+        except Exception, err:
+            pass
 
     def put_instance_health(self, servo_instance_id, instances):
         """
@@ -183,7 +189,13 @@ class EucaELBConnection(ELBConnection):
         params = {'InstanceId':servo_instance_id}
         if instances:
             self.build_list_params(params, instances, 'Instances.member.%d.InstanceId')
-        return self.get_status('PutServoStates', params)
+        response = self.get_object('PutServoStates', params, PutServoStatesResponseType)
+        try:
+            config.set_query_period(response.servo_response_metadata.get_lb_interval)
+            config.set_cwatch_report_period(response.servo_response_metadata.put_metric_interval)
+            config.set_backend_instance_health_period(response.servo_response_metadata.put_instance_health_interval)
+        except Exception, err:
+            pass
 
     def get_servo_load_balancers(self, servo_instance_id):
         #marker = "servo:%s" % servo_instance_id
