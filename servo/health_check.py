@@ -173,6 +173,7 @@ class InstanceHealthChecker(threading.Thread):
                             con.put_instance_health(servo_instance_id, [instance])
                             servo.log.debug('%s: InService status reported' % self.instance_id)
                             last_inservice_reported = dt.now()
+                            last_outofservice_reported = dt.min
                         except Exception, err:
                             servo.log.error('failed to post servo states: %s' % err)
             else:
@@ -191,6 +192,7 @@ class InstanceHealthChecker(threading.Thread):
                             con.put_instance_health(servo_instance_id, [instance])
                             servo.log.debug('%s: OutOfService status reported' % self.instance_id)
                             last_outofservice_reported = dt.now()
+                            last_inservice_reported = dt.min
                         except Exception, err:
                             servo.log.error('failed to post servo states: %s' % err)
 
