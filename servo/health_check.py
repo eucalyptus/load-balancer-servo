@@ -113,7 +113,7 @@ class InstanceHealthChecker(threading.Thread):
     def __init__(self, instance_id, report_elb=True):
         self.instance_id = instance_id
         self.running = True
-        self.inst_status = 'OutOfService'
+        self.inst_status = 'InService'
         self.report_elb = report_elb
         threading.Thread.__init__(self)
 
