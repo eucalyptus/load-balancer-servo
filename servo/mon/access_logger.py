@@ -41,6 +41,7 @@ class AccessLogger(threading.Thread):
         self._last_emit_minute = -1
         self._logs = []
         self._emitted = False
+        self._tmp_log_file = None
 
     def run(self):
         servo.log.info('Starting access logger thread')
@@ -49,28 +50,55 @@ class AccessLogger(threading.Thread):
             self.try_emit()
 
     def try_emit(self):
-        if not self.enabled or len(self._logs) <= 0:
+        if not self.enabled:
             return
         if not self.bucket_name:
             servo.log.error('Access logging is enabled without bucket name')
             return
- 
+        try:
+            if len(self._logs) > 0:
+                self._tmp_log_file = self.write_log(self._tmp_log_file)
+        except Exception, err:
+            servo.log.error('Failed to write logs to temp file: %s' % err)
+            self._tmp_log_file = None
+        finally:
+            del self._logs[:]
         now = dt.now()
         cur_min = now.minute
         if cur_min % self.emit_interval == 0:
             if not self._emitted:
                 try:
-                    self.do_emit()
+                    self.do_emit(self._tmp_log_file)
                 except Exception, err:
                     servo.log.error('Failed to emit access logs: %s' % err)
-                del self._logs[:]
-                self._emitted = True
+                finally:
+                    if self._tmp_log_file:
+                        os.unlink(self._tmp_log_file)
+                    self._tmp_log_file = None
+                    self._emitted = True
         else:
             self._emitted = False
-         
-    def do_emit(self):
-        servo.log.debug('Trying to emit access log of %d entries' % len(self._logs))
-        print 'Trying to emit access log of %d entries' % len(self._logs)
+
+    def write_log(self, file_path=None):
+        if not file_path:
+            tmpfile = tempfile.mkstemp()
+            file_path = tmpfile[1] 
+        fd = None
+        try:
+            fd = os.open(file_path, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
+	    for line in self._logs:
+                os.write(fd, line+'\n')
+            os.close(fd)
+            fd = None
+        finally:
+            if fd:
+                os.close(fd)
+
+        return file_path
+     
+    def do_emit(self, tmpfile_path=None):
+        if not tmpfile_path:
+            return
         aws_access_key_id = config.get_access_key_id()
         aws_secret_access_key = config.get_secret_access_key()
         security_token = config.get_security_token()
@@ -79,20 +107,11 @@ class AccessLogger(threading.Thread):
             raise Exception('Could not connect to object storage (S3) service') 
 
         key_name = self.generate_log_file_name()
-        tmpfile = tempfile.mkstemp()
-        fd = os.fdopen(tmpfile[0],'w')
-        tmpfile_path = tmpfile[1]
-	for line in self._logs:
-            fd.write(line+'\n')
-        fd.close()
-        
         bucket = conn.get_bucket(self.bucket_name)
         k = Key(bucket)
         k.key = key_name
         k.set_contents_from_filename(tmpfile_path)
         k.add_user_grant('FULL_CONTROL', config.get_owner_account_id())
-
-        os.unlink(tmpfile_path)
         servo.log.debug('Access logs were emitted successfully: s3://%s/%s'  % (self.bucket_name,key_name))
 
     def generate_log_file_name(self):
@@ -106,7 +125,8 @@ class AccessLogger(threading.Thread):
         return name
 
     def add_log(self, log):
-        self._logs.append(log)
+        if self.enabled and self.bucket_name:
+            self._logs.append(log)
      
     def stop(self):
         self.running = False
