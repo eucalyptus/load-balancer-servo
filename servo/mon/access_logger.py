@@ -107,11 +107,10 @@ class AccessLogger(threading.Thread):
             raise Exception('Could not connect to object storage (S3) service') 
 
         key_name = self.generate_log_file_name()
-        bucket = conn.get_bucket(self.bucket_name)
+        bucket = conn.get_bucket(self.bucket_name, validate=False)
         k = Key(bucket)
         k.key = key_name
-        k.set_contents_from_filename(tmpfile_path)
-        k.add_user_grant('FULL_CONTROL', config.get_owner_account_id())
+        k.set_contents_from_filename(tmpfile_path, policy='bucket-owner-full-control')
         servo.log.debug('Access logs were emitted successfully: s3://%s/%s'  % (self.bucket_name,key_name))
 
     def generate_log_file_name(self):
