@@ -20,7 +20,7 @@ import time
 import config
 import os
 import traceback
-import urllib2 
+import urllib2
 import servo
 import servo.ws
 from servo.haproxy import ProxyManager
