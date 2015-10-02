@@ -20,6 +20,7 @@ import time
 import config
 import os
 import traceback
+import urllib2 
 import servo
 import servo.ws
 from servo.haproxy import ProxyManager
@@ -93,10 +94,10 @@ class ServoLoop(object):
                             access_logger.loadbalancer = lb.name
                             if access_log_setting.s3_bucket_name != None:
                                 access_logger.bucket_name = access_log_setting.s3_bucket_name
-                                servo.log.debug('access log bucket name: %s' % access_logger.bucket_name)
+                                servo.log.debug('access log bucket name: %s' % urllib2.quote(access_logger.bucket_name))
                             if access_log_setting.s3_bucket_prefix != None:
                                 access_logger.bucket_prefix = access_log_setting.s3_bucket_prefix
-                                servo.log.debug('access log bucket prefix: %s' % access_logger.bucket_prefix)
+                                servo.log.debug('access log bucket prefix: %s' % urllib2.quote(access_logger.bucket_prefix))
                             if access_log_setting.emit_interval != None:
                                 access_logger.emit_interval = int(access_log_setting.emit_interval)
                                 servo.log.debug('access log emit interval: %d' % access_logger.emit_interval)

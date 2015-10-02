@@ -25,6 +25,7 @@ import socket
 import random
 import string
 import tempfile
+import urllib2 
 import os
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
@@ -111,7 +112,7 @@ class AccessLogger(threading.Thread):
         k = Key(bucket)
         k.key = key_name
         k.set_contents_from_filename(tmpfile_path, policy='bucket-owner-full-control')
-        servo.log.debug('Access logs were emitted successfully: s3://%s/%s'  % (self.bucket_name,key_name))
+        servo.log.debug('Access logs were emitted successfully: s3://%s/%s'  % (urllib2.quote(self.bucket_name),urllib2.quote(key_name)))
 
     def generate_log_file_name(self):
         name = ''
