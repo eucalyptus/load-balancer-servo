@@ -121,7 +121,10 @@ class AccessLogger(threading.Thread):
         #{Bucket}/{Prefix}/AWSLogs/{AWS AccountID}/elasticloadbalancing/{Region}/{Year}/{Month}/{Day}/{AWS Account ID}_elasticloadbalancing_{Region}_{Load Balancer Name}_{End Time}_{Load Balancer IP}_{Random String}.log
         #S3://mylogsbucket/myapp/prod/AWSLogs/123456789012/elasticloadbalancing/us-east-1/2014/02/15/123456789012_elasticloadbalancing_us-east-1_my-test-loadbalancer_20140215T2340Z_172.160.001.192_20sg8hgm.log
         now = dt.utcnow()
-        name = name + 'AWSLogs/' + config.get_owner_account_id() + '/elasticloadbalancing/eucalyptus/'+str(now.year)+'/'+str(now.month)+'/'+str(now.day)+'/'+config.get_owner_account_id()+'_elasticloadbalancing_eucalyptus_'+self.loadbalancer+'_'+now.strftime('%Y%m%dT%H%MZ')+'_'+socket.gethostbyname(socket.gethostname())+'_'+''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(8)) +'.log'
+        ip_addr = config.get_public_ip()
+        if not ip_addr:
+            ip_addr = '127.0.0.1'
+        name = name + 'AWSLogs/' + config.get_owner_account_id() + '/elasticloadbalancing/eucalyptus/'+str(now.year)+'/'+str(now.month)+'/'+str(now.day)+'/'+config.get_owner_account_id()+'_elasticloadbalancing_eucalyptus_'+self.loadbalancer+'_'+now.strftime('%Y%m%dT%H%MZ')+'_'+ip_addr+'_'+''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(8)) +'.log'
         return name
 
     def add_log(self, log):

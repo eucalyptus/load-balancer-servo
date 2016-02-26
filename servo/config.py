@@ -152,6 +152,19 @@ def get_servo_id():
         __servo_id = content
     return __servo_id
 
+__public_ip = None
+def get_public_ip():
+    global __public_ip
+    if __public_ip is None:
+        try:
+            resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/public-ipv4")
+            if resp['status'] != '200' or len(content) <= 0:
+                return None
+            __public_ip = content
+        except Exception, err:
+            return None
+    return __public_ip
+
 def appcookie_length():
     return 4096
 
