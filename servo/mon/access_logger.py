@@ -81,12 +81,14 @@ class AccessLogger(threading.Thread):
             self._emitted = False
 
     def write_log(self, file_path=None):
+        fd = None
         if not file_path:
             tmpfile = tempfile.mkstemp()
+            fd = tmpfile[0]
             file_path = tmpfile[1] 
-        fd = None
         try:
-            fd = os.open(file_path, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
+            if not fd:
+                fd = os.open(file_path, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
 	    for line in self._logs:
                 os.write(fd, line+'\n')
             os.close(fd)
