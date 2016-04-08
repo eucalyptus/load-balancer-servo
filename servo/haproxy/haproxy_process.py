@@ -77,11 +77,21 @@ class HaproxyProcess(object):
         self.__status = HaproxyProcess.RUNNING
  
     def get_pid(self):
-        if not os.path.exists(self.__pid_path):
-            raise "pid file is not found in %s" % self.__pid_path
-        pid = commands.getoutput('cat %s' % self.__pid_path)
-        if servo.run('ps -p %s' % pid) != 0:
-            raise "process with pid=%s not found" % pid
+        proc = subprocess.Popen(['ps', '-C', 'haproxy'], stdout=subprocess.PIPE)
+        pid = None
+        if not (proc and proc.stdout):
+            raise ServoError("Failed to obtain haproxy's process id using ps")
+        else:
+            while True:
+                line = proc.stdout.readline()
+                if not line or len(line) <= 0:
+                    break
+                elif line.find('haproxy') >= 0:
+                    tokens = line.split()
+                    pid = tokens[0]
+                    break 
+        if not pid:
+            raise ServoError("No pid is found for haproxy process")
         return pid
 
     def check_haproxy_process(self):

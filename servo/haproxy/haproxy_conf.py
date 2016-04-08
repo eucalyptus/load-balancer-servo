@@ -36,7 +36,7 @@ class ConfBuilder(object):
             servo.log.error('failed to open file %s' % source)
  
     def build(self, destination=None):
-        raise NotImplementedException
+        raise NotImplementedError
 
     def add(self, protocol, port, instances=[], policies=[], cert=None, comment=None, connection_idle_timeout=None):
         try:
@@ -110,7 +110,7 @@ class ConfBuilderHaproxy(ConfBuilder):
                 f.write(line)
             f.close()
         except Exception, err:
-            raise err
+            raise Exception(err)
              #  TODO: LOG ERROR
 
     @staticmethod
@@ -333,7 +333,7 @@ class ConfBuilderHaproxy(ConfBuilder):
 
         backend = 'backend %s' % backend_name 
         if backend not in self.__content_map.iterkeys():
-            raise 'no backend is found with name %s' % backend_name
+            raise Exception('no backend is found with name %s' % backend_name)
 
         backend_conf = self.__content_map[backend]
         lbcookie_enabled = False
