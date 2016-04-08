@@ -105,7 +105,7 @@ class AccessLogger(threading.Thread):
         aws_access_key_id = config.get_access_key_id()
         aws_secret_access_key = config.get_secret_access_key()
         security_token = config.get_security_token()
-        conn = boto.connect_s3(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token, is_secure=False, port=8773, path='/services/objectstorage', host= config.get_objectstorage_service_host(), calling_format='boto.s3.connection.OrdinaryCallingFormat')
+        conn = boto.connect_s3(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, security_token=security_token, is_secure=False, port=config.get_webservice_port(), path='/services/objectstorage', host= config.get_objectstorage_service_host(), calling_format='boto.s3.connection.OrdinaryCallingFormat')
         if not conn:
             raise Exception('Could not connect to object storage (S3) service') 
 

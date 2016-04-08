@@ -104,6 +104,7 @@ def get_security_token():
     token = get_provider().get_security_token()
     return token
 
+###### DEPRECATED ########
 def get_clc_host():
     return '169.254.169.254'
 
@@ -116,6 +117,7 @@ def get_clc_port():
 
 def get_ec2_path():
     return get_value('eucalyptus_path')
+###### END DEPRECATED #######
 
 def get_elb_service_url():
     return get_value('elb_service_url')
@@ -131,6 +133,12 @@ def get_owner_account_id():
 
 def get_ntp_server_url():
     return get_value('ntp_server')
+
+def get_webservice_port():
+    try:
+        return int(get_value('webservice_port'))
+    except Exception, err:
+        return 8773
 
 __availability_zone = None
 def get_availability_zone():

@@ -115,6 +115,7 @@ class InstanceHealthChecker(threading.Thread):
         self.running = True
         self.inst_status = 'InService'
         self.report_elb = report_elb
+        self.initially_reported = False
         threading.Thread.__init__(self)
 
     def health_status(self):
@@ -157,10 +158,11 @@ class InstanceHealthChecker(threading.Thread):
             #print 'healthy? : %s, healthy_count: %d, unhealthy_count: %d, result: %s' % (healthy, healthy_count, unhealthy_count, result)
             if result is None:
                 pass
-            elif result:
+            elif result: # passed one check
                 healthy_count += 1
                 unhealthy_count = 0
-                if healthy_count >= health_check_config.healthy_threshold:
+                if not self.initially_reported or healthy_count >= health_check_config.healthy_threshold:
+                    self.initially_reported = True
                     healthy = True
                     healthy_count = 0
                     instance = StatefulInstance(self.instance_id, 'InService')
@@ -180,6 +182,7 @@ class InstanceHealthChecker(threading.Thread):
                 unhealthy_count += 1
                 healthy_count = 0
                 if unhealthy_count >= health_check_config.unhealthy_threshold:
+                    self.initially_reported = True
                     healthy = False
                     unhealthy_count = 0
                     instance = StatefulInstance(self.instance_id, 'OutOfService')
