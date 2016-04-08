@@ -9,12 +9,14 @@ Group:          Applications/System
 License:        GPLv3 
 URL:            http://www.eucalyptus.com
 Source0:        %{tarball_basedir}.tar.xz
+Source1:        %{name}.tmpfiles
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
 
 BuildRequires:  python%{?__python_ver}-devel
 BuildRequires:  python%{?__python_ver}-setuptools
+BuildRequires:  systemd
 
 Requires:       python%{?__python_ver}
 Requires:       python%{?__python_ver}-boto
@@ -54,6 +56,8 @@ install -p -m 0440 -D scripts/servo-sudoers.conf $RPM_BUILD_ROOT/%{_sysconfdir}/
 install -p -m 755 -D scripts/load-balancer-servo-init $RPM_BUILD_ROOT/%{_initddir}/load-balancer-servo
 install -p -m 755 -D scripts/servo-ntp-update $RPM_BUILD_ROOT%{_libexecdir}/%{name}/ntp-update
 install -m 6700 -d $RPM_BUILD_ROOT/%{_var}/{run,lib,log}/load-balancer-servo
+mkdir -p $RPM_BUILD_ROOT/%{_tmpfilesdir}
+install -m 644 %{SOURCE1} $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}.conf
 
 install -p -m 0750 -D %{name}.cron $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/%{name}
 chmod 0640 $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/%{name}
@@ -98,6 +102,7 @@ fi
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/haproxy_template.conf
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/boto.cfg
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/503.http
+%{_tmpfilesdir}/%{name}.conf
 
 %changelog
 * Tue Dec 16 2014 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.2-0
