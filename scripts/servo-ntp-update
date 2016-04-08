@@ -20,12 +20,15 @@
 
 import filecmp
 import os
+import os.path
 import re
 import shutil
 import subprocess
 import sys
 import syslog
 import tempfile
+import httplib2
+import time
 import servo.config as config
 
 lock_file = '/var/lib/load-balancer-servo/ntp.lock'
@@ -45,8 +48,98 @@ def leave_lock():
     except Exception:
         syslog.syslog("Unable to leave ntp lock file")
 
+def query_metadata(url):
+    try:
+        resp, content = httplib2.Http().request(url)
+        if resp['status'] != '200' or len(content) <= 0:
+            return None
+        return content 
+    except Exception, err:
+        return None
+
+def is_vpc():
+    PRIMARY_DEVICE='eth0'
+    with open('/sys/class/net/%s/address' % PRIMARY_DEVICE,'r') as f:
+        primary_mac = f.readline()
+    if not primary_mac or len(primary_mac) <= 0:
+        raise Exception("Primary mac address is not found")
+
+    url = "http://169.254.169.254/latest/meta-data/network/interfaces/macs/%s/vpc-id" % primary_mac
+    vpc_id = query_metadata(url) 
+     # check if vpc-id is present, then keep a note of primary mac id 
+    if not vpc_id:
+        return False
+    return True
 
 syslog.openlog(sys.argv[0])
+syslog.syslog("Start Checking Network Interfaces")
+try:
+    PRIMARY_DEVICE='eth0'
+    SECONDARY_DEVICE='eth1'
+    IF_UP_CMD = '/usr/sbin/ec2ifup'
+    # test if instance is in VPC
+    if not is_vpc():
+        syslog.syslog("VPC ID for primary interface is not found")
+    else:
+        # keep checking secondary mac 
+        secondary_mac = None
+        while not secondary_mac:
+            try:
+                if not os.path.exists('/sys/class/net/%s/address' % SECONDARY_DEVICE):
+                    time.sleep(5)
+                    syslog.syslog("Waiting for secondary interface")
+                    continue
+                else:
+                    with open('/sys/class/net/%s/address' % SECONDARY_DEVICE,'r') as f:
+                        secondary_mac = f.readline()
+            except Exception, err:
+                syslog.syslog("Exception while checking secondary mac address: %s" % err)
+                time.sleep(5)
+        syslog.syslog("Secondary mac address is found: %s" % secondary_mac)
+       
+        # if secondary mac is found, do 'ec2ifup eth1'
+        for x in range(0, 3):
+            try:
+               subprocess.check_call([IF_UP_CMD, SECONDARY_DEVICE])
+               break
+            except subprocess.CalledProcessError as ex:
+               syslog.syslog("%s eth1 failed: retrying...%d/5" % (IF_UP_CMD, x+1))
+               time.sleep( (x+1)*2 )
+
+        # wait until eth1 gets IP
+        secondary_ip = None
+        while True:
+            try:
+                proc = subprocess.Popen(['/usr/sbin/ip','addr','show','dev', SECONDARY_DEVICE], stdout=subprocess.PIPE)
+                if proc and proc.stdout:
+                    while True:
+                        line = proc.stdout.readline()
+                        if not line or len(line) <= 0:
+                            break
+                        else:
+                            if line.find('inet') >= 0 and line.find('inet6') < 0:
+                                tokens = line.split()
+                                tokens = tokens[1].split('/')
+                                secondary_ip = tokens[0]
+                                break
+            except Exception, err:
+                syslog.syslog("Failed to check secondary interface's IP: %s" % err)
+            if secondary_ip:
+                break
+            else:
+                syslog.syslog("Waiting for secondary interface's IP")
+                time.sleep(5)
+        syslog.syslog("Secondary interface's IP address: %s" % secondary_ip)
+ 
+        # do ifup-routes
+        try:
+            subprocess.check_call(['/etc/sysconfig/network-scripts/ifup-routes', SECONDARY_DEVICE])
+        except subprocess.CalledProcessError as ex:
+            raise Exception("Failed to call ifup-routes")
+        syslog.syslog("All network interfaces are ready")
+except Exception, err:
+    syslog.syslog("Failed to check VPC network interfaces: %s" % err)
+
 syslog.syslog("Starting NTP server check")
 try:
     ntp_servers = config.get_ntp_server_url()
