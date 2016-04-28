@@ -59,9 +59,6 @@ install -m 6700 -d $RPM_BUILD_ROOT/%{_var}/{run,lib,log}/load-balancer-servo
 mkdir -p $RPM_BUILD_ROOT/%{_tmpfilesdir}
 install -m 644 %{SOURCE1} $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}.conf
 
-install -p -m 0750 -D %{name}.cron $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/%{name}
-chmod 0640 $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/%{name}
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -92,7 +89,6 @@ fi
 %{_sysconfdir}/sudoers.d/servo
 %{_initddir}/load-balancer-servo
 %{_libexecdir}/%{name}
-%config(noreplace) %{_sysconfdir}/cron.d/%{name}
 
 %defattr(-,servo,servo,-)
 %dir %{_sysconfdir}/load-balancer-servo

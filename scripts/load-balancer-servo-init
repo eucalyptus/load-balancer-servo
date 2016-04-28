@@ -39,9 +39,14 @@ LOGLEVEL=debug
 BOTO_LOGLEVEL=info
 
 LOCKFILE=/var/lock/subsys/load-balancer-servo
+NTPUPDATE=/usr/libexec/load-balancer-servo/ntp-update
+NTPUPDATE_RESULT=/var/lib/load-balancer-servo/ntp.lock
 
 start() {
     echo -n $"Starting $SERVICE: "
+    if [ ! -e $NTPUPDATE_RESULT ]; then
+        $NTPUPDATE&
+    fi
     daemon --user=$SERVOUSER --pidfile=$PIDFILE $PROCESS -d -p $PIDFILE -l $LOGLEVEL -c $BOTO_CONFIG -b $BOTO_LOGLEVEL
     RETVAL=$?
     echo
