@@ -1,7 +1,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 
 Name:           load-balancer-servo
-Version:        %{build_version}
+Version:        1.3.0
 Release:        0%{?build_id:.%build_id}%{?dist}
 Summary:        Configuration tool for the Eucalyptus LB
 
@@ -101,6 +101,9 @@ fi
 %{_tmpfilesdir}/%{name}.conf
 
 %changelog
+* Fri Jul 22 2016 Garrett Holmstrom <gholms@hpe.com> - 1.3.0
+- Version bump (1.3.0)
+
 * Tue Dec 16 2014 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.0.2-0
 - Added chkconfig changes
 
