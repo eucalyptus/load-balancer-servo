@@ -108,6 +108,7 @@ class HttpAccessLog (HttpLog):
         self.elb_status_code = 200
         self.backend_status_code = -1
         self.http_request = None    
+        self.user_agent = None    
   
     # getters compute ELB-specific time metrics using the Haproxy metrics
     def request_processing_time(self):
@@ -135,11 +136,11 @@ class HttpAccessLog (HttpLog):
     def access_log(self):
         # timestamp elb client:port backend:port request_processing_time backend_processing_time response_processing_time elb_status_code backend_status_code received_bytes sent_bytes request
  
-        return '%s %s %s:%s %s:%s %s %s %s %d %d %d %d \"%s\"' % (self.iso_timestamp(), self.elb, self.client_ip, self.client_port, self.backend_ip, self.backend_port, self.request_processing_time(), self.backend_processing_time(), self.response_processing_time(), self.elb_status_code, self.backend_status_code, self.received_bytes, self.sent_bytes, self.request_str())
+        return '%s %s %s:%s %s:%s %s %s %s %d %d %d %d \"%s\" \"%s\"' % (self.iso_timestamp(), self.elb, self.client_ip, self.client_port, self.backend_ip, self.backend_port, self.request_processing_time(), self.backend_processing_time(), self.response_processing_time(), self.elb_status_code, self.backend_status_code, self.received_bytes, self.sent_bytes, self.request_str(),self.user_agent)
 
     @staticmethod
     def log_format():
-        return 'httplog\ %Ts\ %ci\ %cp\ %si\ %sp\ %Tq\ %Tw\ %Tc\ %Tr\ %Tt\ %ST\ %U\ %B\ %f\ %b\ %s\ %ts\ %r'
+        return 'httplog\ %Ts\ %ci\ %cp\ %si\ %sp\ %Tq\ %Tw\ %Tc\ %Tr\ %Tt\ %ST\ %U\ %B\ %f\ %b\ %s\ %ts\ %r\ %hrl'
 
     @staticmethod 
     def parse(line, loadbalancer=None):
@@ -164,7 +165,8 @@ class HttpAccessLog (HttpLog):
             log.backend_name = token[15]
             log.server_name = token[16]
             log.term_state = token[17]
-            log.http_request = ' '.join(token[18:])
+            log.http_request = ' '.join(token[18:21]) # 3 tuple HTTP request
+            log.user_agent = ' '.join(token[21:])     # Rest of line
             return log
         raise Exception('line: %s, # tokens: %d' % (line, len(token)))
      
