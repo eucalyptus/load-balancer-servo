@@ -1,6 +1,6 @@
 #!/usr/bin/python -tt
 #
-# Copyright 2013 Eucalyptus Systems, Inc.
+# Copyright 2016 Hewlett Packard Enterprise Development Company LP.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
-# Please contact Eucalyptus Systems, Inc., 6755 Hollister Ave., Goleta
+# Please contact Hewlett Packard Enterprise Development Company LP., 6755 Hollister Ave., Goleta
 # CA 93117, USA or visit http://www.eucalyptus.com/licenses/ if you need
 # additional information or have any questions.
 
@@ -70,6 +70,16 @@ def is_vpc():
     if not vpc_id:
         return False
     return True
+
+def check_redis():
+    try:
+        subprocess.check_call(["/usr/bin/systemctl","status", "redis"])
+    except subprocess.CalledProcessError as ex: 
+        syslog.syslog("Starting Redis...")
+        try: 
+            subprocess.check_call(["/usr/bin/systemctl","start", "redis"])
+        except Exception, err:
+            syslog.syslog("Failed to start Redis") 
 
 syslog.openlog(sys.argv[0])
 syslog.syslog("Start Checking Network Interfaces")
@@ -144,6 +154,7 @@ syslog.syslog("Starting NTP server check")
 try:
     ntp_servers = config.get_ntp_server_url()
 except Exception:
+    check_redis()
     leave_lock()
     sys.exit(1)
 
@@ -195,4 +206,5 @@ if valid_servers:
 else:
     syslog.syslog("No NTP server specified")
 
+check_redis()
 leave_lock()

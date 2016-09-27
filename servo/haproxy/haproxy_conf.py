@@ -189,13 +189,13 @@ class ConfBuilderHaproxy(ConfBuilder):
             if connection_idle_timeout:
                 self.__content_map[section_name].append('timeout client %ss' % connection_idle_timeout)
 
-            if config.ENABLE_CLOUD_WATCH:  # this may have significant performance impact
-                self.__content_map[section_name].append('log %s local2 info' % config.CW_LISTENER_DOM_SOCKET)
-                if protocol == 'http' or protocol == 'https':
-                    self.__content_map[section_name].append('capture request header User-Agent len 8192')
-                    self.__content_map[section_name].append('log-format %s' % HttpAccessLog.log_format())
-                elif protocol == 'tcp' or protocol == 'ssl':
-                    self.__content_map[section_name].append('log-format %s' % TcpAccessLog.log_format())
+            # CLOUDWATCH metric update
+            self.__content_map[section_name].append('log %s local2 info' % config.CW_LISTENER_DOM_SOCKET)
+            if protocol == 'http' or protocol == 'https':
+                self.__content_map[section_name].append('capture request header User-Agent len 8192')
+                self.__content_map[section_name].append('log-format %s' % HttpAccessLog.log_format())
+            elif protocol == 'tcp' or protocol == 'ssl':
+                self.__content_map[section_name].append('log-format %s' % TcpAccessLog.log_format())
 
             def_backend = 'backend-%s-%s' % (protocol, port)
             self.__content_map[section_name].append('default_backend %s' % def_backend)

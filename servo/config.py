@@ -27,10 +27,6 @@ CONF_ROOT = "/etc/load-balancer-servo"
 RUN_ROOT = "/var/lib/load-balancer-servo"
 HAPROXY_BIN = "/usr/sbin/haproxy"
 SUDO_BIN = "/usr/bin/sudo"
-QUERY_PERIOD_SEC = 10
-CWATCH_REPORT_PERIOD_SEC = 10
-PUT_BACKEND_INSTANCE_HEALTH_PERIOD_SEC = 60
-ENABLE_CLOUD_WATCH = True # affects the performance of haproxy
 CW_LISTENER_DOM_SOCKET ='/var/lib/load-balancer-servo/haproxy.sock'
 FLOPPY_MOUNT_DIR = RUN_ROOT+"/floppy"
 CONNECTION_IDLE_TIMEOUT = 60
@@ -128,6 +124,9 @@ def get_euare_service_url():
 def get_objectstorage_service_host():
     return get_value('objectstorage_service_url')
 
+def get_swf_service_url():
+    return get_value('simpleworkflow_service_url')
+
 def get_owner_account_id():
     return get_value('loadbalancer_owner_account')
 
@@ -181,21 +180,3 @@ def appcookie_timeout():
         return 60*int(get_value('app-cookie-duration'))
     except Exception, err:
         return 60*24 #24 hours
-
-def set_query_period(period_sec):
-    global QUERY_PERIOD_SEC
-    if QUERY_PERIOD_SEC != period_sec:
-        servo.log.debug('updated query period to '+str(period_sec)+' seconds')
-        QUERY_PERIOD_SEC = period_sec
-
-def set_cwatch_report_period(period_sec):
-    global CWATCH_REPORT_PERIOD_SEC
-    if CWATCH_REPORT_PERIOD_SEC != period_sec:
-        servo.log.debug('updated cloudwatch putMetric period to '+str(period_sec)+' seconds')
-        CWATCH_REPORT_PERIOD_SEC = period_sec
-
-def set_backend_instance_health_period(period_sec):
-    global PUT_BACKEND_INSTANCE_HEALTH_PERIOD_SEC
-    if PUT_BACKEND_INSTANCE_HEALTH_PERIOD_SEC != period_sec:
-        servo.log.debug('updated backend instance health status update period to '+str(period_sec)+' seconds')
-        PUT_BACKEND_INSTANCE_HEALTH_PERIOD_SEC = period_sec

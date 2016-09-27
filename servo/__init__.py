@@ -23,7 +23,7 @@
 from servo.logutil import log, set_loglevel, set_boto_loglevel
 from servo.config import set_pidfile, set_boto_config
 from servo.main_loop import ServoLoop
-from servo.cw_loop import CWLoop
+import servo.swf_worker as swf_worker
 import subprocess
 import os
 import time
@@ -67,10 +67,20 @@ def run_with_grep(cmd, grep):
         log.debug(output)
     return proc2.returncode
 
-
-def start_servo():
+def start_all():
     spin_locks()
+    start_swf_worker()
+    start_servo()
+
+def start_swf_worker():
+    worker = swf_worker.get_worker()
+    worker.start()
+
+def stop_swf_worker():
+    worker = swf_worker.get_worker()
+    worker.stop()
+    
+def start_servo():
     if run_as_sudo('modprobe floppy') != 0:
         log.error('failed to load floppy driver')
-    CWLoop().start()
-    ServoLoop().start()
+    ServoLoop().run()

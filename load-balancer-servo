@@ -114,11 +114,11 @@ if __name__ == "__main__":
         usage()
 
     if daemon:
-        daemonize(servo.start_servo)
+        daemonize(servo.start_all)
     else:
         try:
             servo.log.info("Starting Loadbalancer Servo")
-            servo.start_servo()
+            servo.start_all()
         except KeyboardInterrupt:
             servo.log.info("Interrupted By User")
             sys.exit(0)

@@ -27,6 +27,10 @@ Requires:       crontabs
 Requires:       ntp
 Requires:       ntpdate
 Requires:       m2crypto
+Requires:       redis
+Requires:       python-redis
+Requires:       java-1.8.0-openjdk
+Requires:       eucalyptus-common-java-libs
 Requires(pre):  %{_sbindir}/useradd
 Requires(post): chkconfig
 Requires(preun): chkconfig
@@ -54,11 +58,11 @@ rm -rf $RPM_BUILD_ROOT
 #
 install -p -m 0440 -D scripts/servo-sudoers.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sudoers.d/servo
 install -p -m 755 -D scripts/load-balancer-servo-init $RPM_BUILD_ROOT/%{_initddir}/load-balancer-servo
-install -p -m 755 -D scripts/servo-ntp-update $RPM_BUILD_ROOT%{_libexecdir}/%{name}/ntp-update
+install -p -m 755 -D scripts/servo-prep $RPM_BUILD_ROOT%{_libexecdir}/%{name}/servo-prep
 install -m 6700 -d $RPM_BUILD_ROOT/%{_var}/{run,lib,log}/load-balancer-servo
 mkdir -p $RPM_BUILD_ROOT/%{_tmpfilesdir}
 install -m 644 %{SOURCE1} $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}.conf
-
+install -p -m 755 -D scripts/log4j.xml $RPM_BUILD_ROOT/%{_var}/lib/%{name}/log4j.xml
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -95,12 +99,19 @@ fi
 %dir %{_var}/run/load-balancer-servo
 %dir %{_var}/log/load-balancer-servo
 %dir %{_var}/lib/load-balancer-servo
+%{_var}/lib/%{name}/log4j.xml
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/haproxy_template.conf
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/boto.cfg
 %config(noreplace) %{_sysconfdir}/load-balancer-servo/503.http
 %{_tmpfilesdir}/%{name}.conf
 
 %changelog
+* Tue Sep 27 2016 Sang-Min Park <smpark.uva@gmail.com> - 1.3.0
+- Rename ntp-update script file to servo-prep
+
+* Mon Aug 08 2016 Sang-Min Park <smpark.uva@gmail.com> - 1.3.0
+- Add Jar dependicies into library directory
+
 * Fri Jul 22 2016 Garrett Holmstrom <gholms@hpe.com> - 1.3.0
 - Version bump (1.3.0)
 

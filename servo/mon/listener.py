@@ -48,7 +48,7 @@ class LogListener(threading.Thread):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         sock.bind(server_address)
         self.socket = sock
-
+        servo.log.info('Starting domain socket for cloudwatch metrics')
         while self.running:
             try:
                 data, client_address = sock.recvfrom(1024)
