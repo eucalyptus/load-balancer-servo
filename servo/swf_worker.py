@@ -146,6 +146,9 @@ class SwfWorker(threading.Thread):
                 servo.log.error('Failed to terminate process during shutdown: %s', err)
         elif proc.poll() is not None:
             servo.log.error('Swf worker process unexpectedly terminated with return code=%d' % proc.returncode)
+            servo.log.debug('Restarting Swf worker process...')
+            servo.swf_worker.singleton_worker = None     
+            servo.swf_worker.get_worker().start()    
         else:
             servo.log.info('Shutting down thread without terminating worker process (%d)' % pid)
      
