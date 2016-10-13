@@ -30,6 +30,7 @@ import json
 from boto.resultset import ResultSet
 from boto.compat import six
 from servo.ws.loadbalancer import LoadBalancer
+from servo.ws.policies import PolicyDescription
 from servo.haproxy import ProxyManager
 from servo.haproxy.listener import Listener
 import servo.hostname_cache
@@ -104,7 +105,33 @@ class ServoLoop(object):
             r.lpush('get-instance-status-reply', json_format)
         except Exception, err:
             servo.log.error('failed to publish instance status data: %s' % str(err))
-      
+
+    @staticmethod
+    def unmarshall_policy(msg):
+        markers = [('member', LoadBalancer)]
+        rs = ResultSet(markers)
+        h = boto.handler.XmlHandler(rs, None)
+        if isinstance(msg, six.text_type):
+            msg = msg.encode('utf-8')
+        xml.sax.parseString(msg, h)
+        lbs = rs
+        if lbs and len(lbs) > 0:
+            lb = lbs[0]  
+            if lb.policy_descriptions and len(lb.policy_descriptions) > 0:
+                return lb.policy_descriptions[0]
+        return None
+ 
+    @staticmethod
+    def set_policy(msg):
+        try:
+            if not 'data' in msg or not msg['data']:
+                raise Exception('No data field in the received redis message')
+            msg = msg['data']
+            policy = ServoLoop.unmarshall_policy(msg)
+            ServoLoop.loadbalancer_policies[policy.policy_name] = policy 
+        except Exception, err:
+            servo.log.error('failed to unmarshall policy description: %s' % str(err))
+ 
     @staticmethod
     def unmarshall_loadbalancer(msg):
         markers = [('member', LoadBalancer)]
@@ -230,6 +257,7 @@ class ServoLoop(object):
             try:
                 self.__redis = ServoLoop.get_redis()
                 self.__pubsub = self.__redis.pubsub()
+                self.__pubsub.subscribe(**{'set-policy': ServoLoop.set_policy})
                 self.__pubsub.subscribe(**{'set-loadbalancer': ServoLoop.set_loadbalancer})
                 self.__pubsub.subscribe(**{'get-instance-status': ServoLoop.report_instance_status})
                 self.__pubsub.subscribe(**{'get-cloudwatch-metrics': ServoLoop.report_cloudwatch_metrics})
@@ -241,9 +269,11 @@ class ServoLoop(object):
                 time.sleep(10)
                 continue
 
+    loadbalancer_policies={}
+
     @staticmethod
     def get_backend_policies(loadbalancer, instance_port):
-        if not loadbalancer or not loadbalancer.backends or not loadbalancer.policy_descriptions:
+        if not loadbalancer or not loadbalancer.backends:
             return []
         policy_names = []
         policies = []
@@ -252,8 +282,8 @@ class ServoLoop(object):
                 if backend.instance_port == instance_port:
                     for p in backend.policies:
                         policy_names.append(p.policy_name)
-            for policy_desc in loadbalancer.policy_descriptions: 
-                if policy_desc.policy_name in policy_names or policy_desc.policy_type_name == 'PublicKeyPolicyType':
+            for policy_name, policy_desc in ServoLoop.loadbalancer_policies.items():
+                if policy_name in policy_names or policy_desc.policy_type_name == 'PublicKeyPolicyType':
                     policy = LoadbalancerPolicy.from_policy_description(policy_desc)
                     if policy:
                         policies.append(policy)
@@ -269,12 +299,16 @@ class ServoLoop(object):
             return []
         policies = [] 
         try:
-            for policy_desc in loadbalancer.policy_descriptions: 
-                if policy_desc.policy_name in listener_policy_names:
+            for policy_name in listener_policy_names:
+                if policy_name in ServoLoop.loadbalancer_policies:
+                    policy_desc = ServoLoop.loadbalancer_policies[policy_name]
                     policy = LoadbalancerPolicy.from_policy_description(policy_desc)
                     if policy:
                         policies.append(policy)
-                
+                    else:
+                        servo.log.error('failed to create policy object from policy %s' % policy_name)
+                else:
+                    servo.log.error('unable to find policy description: %s' % policy_name)
         except Exception, err:
             servo.log.error('failed to create policy objects: %s' % err)
             servo.log.debug(traceback.format_exc())
