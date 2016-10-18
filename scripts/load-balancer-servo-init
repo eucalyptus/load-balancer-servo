@@ -34,6 +34,7 @@ SERVICE=load-balancer-servo
 PROCESS=/usr/bin/load-balancer-servo
 PIDFILE=/var/run/load-balancer-servo/servo.pid
 BOTO_CONFIG=/etc/load-balancer-servo/boto.cfg
+SERVO_LOG=/var/log/load-balancer-servo/servo.log
 SERVOUSER=servo
 LOGLEVEL=debug
 BOTO_LOGLEVEL=info
@@ -43,12 +44,18 @@ NTPUPDATE=/usr/libexec/load-balancer-servo/ntp-update
 NTPUPDATE_RESULT=/var/lib/load-balancer-servo/ntp.lock
 
 start() {
-    echo -n $"Starting $SERVICE: "
+    echo -n $"Starting $SERVICE: " 
+    daemon --user=$SERVOUSER --pidfile=$PIDFILE $PROCESS -d -p $PIDFILE -l $LOGLEVEL -c $BOTO_CONFIG -b $BOTO_LOGLEVEL
+    RETVAL=$?
+
+    while [ ! -e $SERVO_LOG ]
+    do
+        sleep 1
+    done
+
     if [ ! -e $NTPUPDATE_RESULT ]; then
         $NTPUPDATE&
     fi
-    daemon --user=$SERVOUSER --pidfile=$PIDFILE $PROCESS -d -p $PIDFILE -l $LOGLEVEL -c $BOTO_CONFIG -b $BOTO_LOGLEVEL
-    RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch $LOCKFILE
     return $RETVAL
