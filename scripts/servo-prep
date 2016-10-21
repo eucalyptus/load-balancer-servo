@@ -29,6 +29,7 @@ import syslog
 import tempfile
 import httplib2
 import time
+from netaddr import IPNetwork
 import servo.config as config
 
 lock_file = '/var/lib/load-balancer-servo/ntp.lock'
@@ -147,6 +148,19 @@ try:
         except subprocess.CalledProcessError as ex:
             raise Exception("Failed to call ifup-routes")
         syslog.syslog("All network interfaces are ready")
+  
+        # setup routes for secondary interface's vpc-wide cidr
+        try:    
+            secondary_mac = secondary_mac.strip()
+            url = 'http://169.254.169.254/latest/meta-data/network/interfaces/macs/%s/vpc-ipv4-cidr-block' % secondary_mac
+            vpc_cidr = query_metadata(url)
+            if  vpc_cidr is None or len(vpc_cidr) <= 0:
+                raise Exception("Failed to find vpc's cidr range")
+            router_ip = IPNetwork(vpc_cidr)[1]
+            subprocess.check_call(['/usr/sbin/ip','route','add', vpc_cidr, 'via', str(router_ip)]) 
+            syslog.syslog("Successfully setup VPC route for secondary interface")
+        except Exception, err:
+            syslog.syslog("Failed to setup VPC route for secondary interface: %s" %  err)
 except Exception, err:
     syslog.syslog("Failed to check VPC network interfaces: %s" % err)
 
