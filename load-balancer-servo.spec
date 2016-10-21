@@ -27,6 +27,7 @@ Requires:       crontabs
 Requires:       ntp
 Requires:       ntpdate
 Requires:       m2crypto
+Requires:       python-netaddr
 Requires(pre):  %{_sbindir}/useradd
 Requires(post): chkconfig
 Requires(preun): chkconfig
