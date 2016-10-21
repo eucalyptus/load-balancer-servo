@@ -156,8 +156,8 @@ try:
             vpc_cidr = query_metadata(url)
             if  vpc_cidr is None or len(vpc_cidr) <= 0:
                 raise Exception("Failed to find vpc's cidr range")
-            router_ip = IPNetwork(vpc_cidr)[1]
-            subprocess.check_call(['/usr/sbin/ip','route','add', vpc_cidr, 'via', str(router_ip)]) 
+            #router_ip = IPNetwork(vpc_cidr)[1]
+            subprocess.check_call(['/usr/sbin/ip','route','add', vpc_cidr, 'dev', SECONDARY_DEVICE]) 
             syslog.syslog("Successfully setup VPC route for secondary interface")
         except Exception, err:
             syslog.syslog("Failed to setup VPC route for secondary interface: %s" %  err)
