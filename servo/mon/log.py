@@ -56,7 +56,7 @@ class HttpLog(HaproxyLog):
         self.Tt = Tt  # total time in milliseconds elapsed between the accept and the last close 
 
     def get_latency(self):
-        return self.Tt
+        return self.Tr
 
     def get_request_count(self):
         return 1
@@ -113,7 +113,7 @@ class HttpAccessLog (HttpLog):
     # getters compute ELB-specific time metrics using the Haproxy metrics
     def request_processing_time(self):
         try:
-            return '%.6f' % (self.Tw/1000.0)
+            return '%.6f' % ((self.Tw + self.Tc)/1000.0)
         except Exception,err:
             return '-1'
 
@@ -227,7 +227,7 @@ class TcpAccessLog(TcpLog):
 
     def request_processing_time(self):
         try:
-            return '%.6f' % (self.Tw/1000.0)
+            return '%.6f' % ((self.Tw + self.Tc)/1000.0)
         except Exception, err:
             return '-1'
 
