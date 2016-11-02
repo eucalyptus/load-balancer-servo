@@ -42,7 +42,7 @@ class ELBMetrics(object):
 class ProxyStatistics(object):
     def __init__(self):
         self.__num_request = 0
-        self.__latency_sum = 0
+        self.__latency_sum = long(0)
         self.__http_elb_4xx = 0
         self.__http_elb_5xx = 0
         self.__http_be_2xx = 0
@@ -76,7 +76,7 @@ class ProxyStatistics(object):
 
     def clear_all(self):
         self.__num_request = 0
-        self.__latency_sum = 0
+        self.__latency_sum = long(0)
         self.__http_elb_4xx = 0
         self.__http_elb_5xx = 0
         self.__http_be_2xx = 0
@@ -84,27 +84,14 @@ class ProxyStatistics(object):
         self.__http_be_4xx = 0
         self.__http_be_5xx = 0 
 
-    def get_and_clear_stat(self):
-        self.cv.acquire()
-        try:
-            if self.__num_request >0:
-                latency= int(self.__latency_sum / self.__num_request)
-            else:
-                latency= 0 
-            metric = ELBMetrics(latency, self.__num_request, self.__http_elb_4xx, self.__http_elb_5xx, self.__http_be_2xx, self.__http_be_3xx, self.__http_be_4xx, self.__http_be_5xx)
-            self.clear_all()
-        finally:
-            self.cv.release()
-
-        return metric
-
     def get_json_and_clear_stat(self):
         self.cv.acquire()
         try:
-            if self.__num_request >0:
-                latency= int(self.__latency_sum / self.__num_request)
-            else:
-                latency= 0 
+            latency = long(self.__latency_sum)
+            if self.__num_request <= 0:
+                latency = 0
+            elif latency < 0:
+                latency = 0 
             m_map = {}
             m_map["Latency"] = str(latency)
             m_map["RequestCount"] = str(self.__num_request)
