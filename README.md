@@ -37,5 +37,5 @@ The *load-balancer-servo* service can be started by running:
     $ systemctl start load-balancer-servo
 
 Please Note: This service will **not** work unless it is running on a Eucalyptus
-instance that has been instantiated by the Eucalyptus Balancer service.
+instance that has been instantiated by the Eucalyptus LoadBalancer service.
 
