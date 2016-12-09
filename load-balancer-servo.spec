@@ -1,7 +1,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 
 Name:           load-balancer-servo
-Version:        1.3.0
+Version:        1.4.0
 Release:        0%{?build_id:.%build_id}%{?dist}
 Summary:        Configuration tool for the Eucalyptus LB
 
@@ -107,6 +107,9 @@ fi
 %{_tmpfilesdir}/%{name}.conf
 
 %changelog
+* Fri Dec 09 2016 Matt Bacchi <mbacchi@hpe.com> - 1.4.0
+* Version bump (1.4.0)
+
 * Tue Sep 27 2016 Sang-Min Park <smpark.uva@gmail.com> - 1.3.0
 - Rename ntp-update script file to servo-prep
 
