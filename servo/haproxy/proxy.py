@@ -75,8 +75,7 @@ class ProxyActionDefaultTransaction(ProxyActionTransaction):
                  servo.log.debug(action)
                  action.run()  # will replace the haconfig file in-place
              except Exception, err: 
-                 servo.log.error('update failed: %s' % err)
-                 servo.log.warning('failed to run the action. reverting the change')
+                 servo.log.error('Updating listeners failed: %s' % err)
                  #copy the backup back to the original
                  shutil.copy2(conf_backup, CONF_FILE)
                  os.unlink(conf_backup)
@@ -156,8 +155,7 @@ class ProxyCreate(ProxyAction):
             try:
                 f = FloppyCredential() 
             except Exception, err:
-                servo.log.error('failed to get credentials from floppy: %s' % err)
-                return
+                raise Exception('failed to get credentials from floppy: %s' % err)
  
             try:
                 access_key_id = config.get_access_key_id()
@@ -167,8 +165,7 @@ class ProxyCreate(ProxyAction):
                 cert_arn = self.__listener.ssl_cert_arn().strip()
                 cert= con.download_server_certificate(f.get_instance_pub_key(), f.get_instance_pk(), f.get_iam_pub_key(), f.get_iam_token(), cert_arn)
             except Exception, err:
-                servo.log.error('failed to download the server certificate: %s' % err)
-                return
+                raise Exception('failed to download the server certificate: %s' % err)
 
             try:
                 arn = self.__listener.ssl_cert_arn()
@@ -191,7 +188,7 @@ class ProxyCreate(ProxyAction):
                 self.__listener.set_ssl_cert_path(cert_file)
                 servo.log.info('ssl certificate ready for use: %s' % arn)
             except Exception, err:
-                servo.log.error('failed to create the server certificate files: %s' % err)
+                raise Exception('failed to create the server certificate files: %s' % err)
         
         try: 
             comment=None
@@ -200,8 +197,7 @@ class ProxyCreate(ProxyAction):
             builder.add(protocol=self.__listener.protocol(), port=self.__listener.port(), instances=instances, policies = self.__listener.policies(), cert=self.__listener.ssl_cert_path(), comment=comment, connection_idle_timeout = self.__listener.connection_idle_timeout()).build(CONF_FILE)
         except Exception, err:
             self.__status =ProxyAction.STATUS_ERROR
-            servo.log.error('failed to add new frontend to the config: %s' % err)
-            return
+            raise Exception('failed to add new frontend to the config: %s' % err)
         self.__status = ProxyAction.STATUS_DONE
 
     def status(self):
@@ -225,9 +221,8 @@ class ProxyRemove(ProxyAction):
         try: 
             builder.remove_protocol_port(portToRemove).build(CONF_FILE)
         except Exception, err:
-            servo.log.error("failed to remove the port from the haproxy config: %s" % err)
             self.__status =ProxyAction.STATUS_ERROR
-            return
+            raise Exception("failed to remove the port from the haproxy config: %s" % err)
         self.__status = ProxyAction.STATUS_DONE
 
     def __repr__(self):
