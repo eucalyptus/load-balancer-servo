@@ -107,7 +107,7 @@ fi
 %{_tmpfilesdir}/%{name}.conf
 
 %changelog
-* Mon Mar 06 2016 Matt Bacchi <mbacchi@hpe.com> - 1.5.0
+* Mon Mar 06 2017 Matt Bacchi <mbacchi@hpe.com> - 1.5.0
 * Version bump (1.5.0)
 
 * Fri Dec 09 2016 Matt Bacchi <mbacchi@hpe.com> - 1.4.0
