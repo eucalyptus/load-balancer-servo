@@ -48,10 +48,10 @@ class ProxyManager(object):
         for incoming in listeners:
             if not incoming in self.__listeners:
                 to_add.append(incoming)
-        servo.log.debug("to-add: %d, to-delete: %d" % (len(to_add), len(to_delete)))
         if len(to_delete) == 0 and len(to_add) == 0:
             return self.__listeners
 
+        servo.log.debug("listeners to-add: %d, to-delete: %d" % (len(to_add), len(to_delete)))
         proxy_actions = [] 
         for delete in to_delete:
             proxy_actions.append(ProxyRemove(delete))

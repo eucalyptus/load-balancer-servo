@@ -51,11 +51,20 @@ class AccessLogger(threading.Thread):
             self.try_emit()
 
     def try_emit(self):
+        servo.log.debug('access log enabled?: %s' % self.enabled)
         if not self.enabled:
             return
+
+        if self.bucket_name:
+            servo.log.debug('access log bucket name: %s' % urllib2.quote(self.bucket_name))
+        if self.bucket_prefix:
+            servo.log.debug('access log bucket prefix: %s' % urllib2.quote(self.bucket_prefix))
+        servo.log.debug('access log emit interval: %d' % self.emit_interval)
+
         if not self.bucket_name:
             servo.log.error('Access logging is enabled without bucket name')
             return
+
         try:
             if len(self._logs) > 0:
                 self._tmp_log_file = self.write_log(self._tmp_log_file)
