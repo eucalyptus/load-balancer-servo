@@ -172,6 +172,19 @@ def get_public_ip():
             return None
     return __public_ip
 
+__private_ip = None
+def get_private_ip():
+    global __private_ip
+    if __private_ip is None:
+        try:
+            resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/local-ipv4")
+            if resp['status'] != '200' or len(content) <= 0:
+                return None
+            __private_ip = content
+        except Exception, err:
+            return None
+    return __private_ip
+
 def appcookie_length():
     return 4096
 
