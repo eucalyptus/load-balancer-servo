@@ -159,18 +159,29 @@ def get_servo_id():
         __servo_id = content
     return __servo_id
 
-__public_ip = None
-def get_public_ip():
-    global __public_ip
-    if __public_ip is None:
-        try:
+def get_public_ip(mac=None):
+    try:
+        if mac is None:
             resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/public-ipv4")
-            if resp['status'] != '200' or len(content) <= 0:
-                return None
-            __public_ip = content
-        except Exception, err:
-            return None
-    return __public_ip
+        else:
+            resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/network/interfaces/macs/%s/public-ipv4s" % mac)
+        if resp['status'] == '200' and len(content) > 0:
+            return content
+    except Exception, err:
+        return None
+    return None
+
+def get_private_ip(mac=None):
+    try:
+        if mac is None:
+            resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/local-ipv4")
+        else:
+            resp, content = httplib2.Http().request("http://169.254.169.254/latest/meta-data/network/interfaces/macs/%s/local-ipv4s" % mac)
+        if resp['status'] == '200' and len(content) > 0:
+            return content
+    except Exception, err:
+        return None
+    return None
 
 def appcookie_length():
     return 4096
