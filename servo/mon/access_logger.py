@@ -129,19 +129,21 @@ class AccessLogger(threading.Thread):
     def get_accesslog_ip(self):
         try:
             default_ip = "0.0.0.0"
+            mac = None
             ip = config.get_public_ip()
-            if ip is None or ip == default_ip:
-                ip = self.extract_from_secondary_nic()
+            if ip is None or ip == "0.0.0.0":
+                mac = self.extract_mac_from_secondary_nic()
+                ip = config.get_public_ip(mac)
             if ip is None:
-                ip = config.get_private_ip()
+                ip = config.get_private_ip(mac)
             if ip is None:
                 ip = default_ip
             return ip
         except Exception, err:
             servo.log.debug("Failed to get IP: %s" % err)
 
-    def extract_from_secondary_nic(self):
-        secondary_ip = None
+    def extract_mac_from_secondary_nic(self):
+        mac = None
         try:
             SECONDARY_DEVICE = 'eth1'
             proc = subprocess.Popen(['/usr/sbin/ip', 'addr', 'show', 'dev', SECONDARY_DEVICE], stdout=subprocess.PIPE)
@@ -151,14 +153,13 @@ class AccessLogger(threading.Thread):
                     if not line or len(line) <= 0:
                         break
                     else:
-                        if line.find('inet') >= 0 and line.find('inet6') < 0:
+                        if line.find('link/ether') >= 0:
                             tokens = line.split()
-                            tokens = tokens[1].split('/')
-                            secondary_ip = tokens[0]
+                            mac = tokens[1]
                             break
-            return secondary_ip
+            return mac
         except Exception, err:
-            return secondary_ip
+            return mac
 
     def generate_log_file_name(self):
         name = ''
